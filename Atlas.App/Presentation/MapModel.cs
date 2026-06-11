@@ -2,10 +2,16 @@ using Atlas.Core;
 
 namespace Atlas.App.Presentation;
 
-public partial record MapModel(IAppModelSource ModelSource)
+public partial record MapModel(IRuntimeBridge Bridge)
 {
     // Named Graph because the MVUX generator reserves 'Model' on the generated ViewModel.
-    public IFeed<AppModel> Graph => Feed.Async(ModelSource.LoadAsync);
+    // Starts as the static model; every observed route from a connected agent re-emits.
+    public IFeed<AppModel> Graph => Feed.AsyncEnumerable(Bridge.Models);
+
+    public IFeed<bool> RuntimeConnected => Feed.AsyncEnumerable(Bridge.Connection);
+
+    public IFeed<string> RuntimeLabel =>
+        RuntimeConnected.Select(connected => connected ? "RUNTIME · CONNECTED" : "STATIC · SAMPLE MODEL");
 
     // Empty state = no selection; MVUX models absence as None rather than null.
     public IState<AppNode> Selected => State<AppNode>.Empty(this);

@@ -1,6 +1,7 @@
 <Project Sdk="Uno.Sdk">
   <ItemGroup>
     <ProjectReference Include="..\Atlas.Core\Atlas.Core.csproj" />
+    <ProjectReference Include="..\Atlas.Runtime\Atlas.Runtime.csproj" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="..\samples\rounds-app-model.json" Link="Fixtures\rounds-app-model.json" LogicalName="Atlas.App.Fixtures.rounds-app-model.json" />

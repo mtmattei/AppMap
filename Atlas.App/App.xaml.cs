@@ -66,6 +66,7 @@ public partial class App : Application
                 .ConfigureServices((context, services) =>
                 {
                     services.AddSingleton<IAppModelSource, JsonAppModelSource>();
+                    services.AddSingleton<IRuntimeBridge, RuntimeBridge>();
                 })
                 .UseNavigation(ReactiveViewModelMappings.ViewModelMappings, RegisterRoutes)
             );

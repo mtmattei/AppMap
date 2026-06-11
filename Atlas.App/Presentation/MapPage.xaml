@@ -16,6 +16,9 @@
     <local:StatusVisibleConverter x:Key="StatusVisible" />
     <local:NodeJsonConverter x:Key="NodeJson" />
     <local:IndexVisibleConverter x:Key="IndexVisible" />
+    <local:BoolToBrushConverter x:Key="ConnectedDot"
+                                TrueBrush="{StaticResource AtlasObservedBrush}"
+                                FalseBrush="{StaticResource AtlasTextMuted2Brush}" />
   </Page.Resources>
 
   <!-- Canvas shortcuts, mirroring Hot Design: Ctrl+0 reset, Ctrl+9 fit, Ctrl+/- zoom -->
@@ -96,8 +99,15 @@
                 Padding="11,5"
                 BorderBrush="{StaticResource AtlasBorderBrush}"
                 BorderThickness="1">
-          <TextBlock Text="STATIC · SAMPLE MODEL"
-                     Style="{StaticResource AtlasMonoCaption}" />
+          <utu:AutoLayout Orientation="Horizontal"
+                          Spacing="7"
+                          CounterAxisAlignment="Center">
+            <Ellipse Width="7"
+                     Height="7"
+                     Fill="{Binding RuntimeConnected, Converter={StaticResource ConnectedDot}}" />
+            <TextBlock Text="{Binding RuntimeLabel}"
+                       Style="{StaticResource AtlasMonoCaption}" />
+          </utu:AutoLayout>
         </Border>
       </utu:AutoLayout>
     </utu:AutoLayout>
