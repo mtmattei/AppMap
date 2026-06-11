@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Atlas — Agentic App Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0e1014; --bg-2:#14171d; --surface:#181c23; --surface-2:#1e232c;
+    --border:#262d38; --border-2:#313a47;
+    --text:#e6e9ef; --muted:#8b94a3; --muted-2:#5d6571;
+    --coral:#ff7b72;   /* keywords · warnings · orphan */
+    --blue:#79c0ff;    /* types · declared */
+    --sage:#7ee787;    /* strings · observed (runtime truth) */
+    --amber:#ffcb6b;   /* cursor accent · live location */
+    --purple:#d2a8ff;  /* shell / root */
+    --node-w:182px; --node-h:78px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"Martian Mono",ui-monospace,monospace;
+    font-size:13px; overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  .serif{font-family:"Newsreader",Georgia,serif;}
+
+  /* ---- shell ---- */
+  .app{display:grid;grid-template-rows:52px 1fr;height:100vh}
+  .topbar{
+    display:flex;align-items:center;gap:18px;padding:0 18px;
+    background:var(--bg-2);border-bottom:1px solid var(--border);
+  }
+  .brand{display:flex;align-items:baseline;gap:10px}
+  .brand .mark{
+    width:14px;height:14px;border-radius:3px;
+    background:conic-gradient(from 45deg,var(--coral),var(--blue),var(--sage),var(--purple),var(--coral));
+    transform:rotate(45deg);display:inline-block;
+  }
+  .brand h1{font-size:14px;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+  .brand .sub{font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+  .topbar .spacer{flex:1}
+  .pill{
+    display:flex;align-items:center;gap:7px;font-size:10.5px;color:var(--muted);
+    border:1px solid var(--border);border-radius:999px;padding:5px 11px;letter-spacing:.06em;
+    text-transform:uppercase;
+  }
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--sage);box-shadow:0 0 0 0 var(--sage)}
+  .dot.live{animation:pulse 2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(126,231,135,.5)}70%{box-shadow:0 0 0 6px rgba(126,231,135,0)}100%{box-shadow:0 0 0 0 rgba(126,231,135,0)}}
+  .app-name{color:var(--text);font-size:11px}
+
+  .body{display:grid;grid-template-columns:1fr 372px;height:100%;min-height:0}
+
+  /* ---- canvas ---- */
+  .canvas-wrap{position:relative;overflow:hidden;background:
+    radial-gradient(circle at 1px 1px, rgba(255,255,255,.035) 1px, transparent 0) 0 0/26px 26px,
+    var(--bg);
+    cursor:grab;
+  }
+  .canvas-wrap.panning{cursor:grabbing}
+  #world{position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform}
+  #edges{position:absolute;top:0;left:0;overflow:visible;pointer-events:none}
+
+  .node{
+    position:absolute;width:var(--node-w);min-height:var(--node-h);
+    background:var(--surface);border:1px solid var(--border-2);border-radius:9px;
+    border-left:3px solid var(--blue);
+    padding:9px 11px 10px;cursor:pointer;user-select:none;
+    transition:border-color .12s,box-shadow .12s,opacity .15s,transform .05s;
+  }
+  .node:hover{border-color:#41506333;box-shadow:0 4px 22px rgba(0,0,0,.45)}
+  .node .kind{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-2)}
+  .node .name{font-size:12.5px;font-weight:600;margin-top:1px;letter-spacing:.01em}
+  .node .route{font-size:10px;color:var(--sage);margin-top:5px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .node .vm{font-size:9.5px;color:var(--blue);margin-top:2px;opacity:.7}
+  .node.kind-shell{border-left-color:var(--purple)}
+  .node.kind-dialog{border-left-color:var(--amber)}
+  .node.selected{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber),0 6px 26px rgba(0,0,0,.5)}
+  .node.live{box-shadow:0 0 0 1px rgba(255,203,107,.4),0 0 24px rgba(255,203,107,.12)}
+  .node.live .live-tag{
+    position:absolute;top:-9px;right:10px;font-size:8.5px;letter-spacing:.1em;
+    background:var(--amber);color:#1a1205;padding:2px 7px;border-radius:5px;font-weight:600;
+    display:flex;align-items:center;gap:4px;
+  }
+  .node.live .live-tag::before{content:"";width:5px;height:5px;border-radius:50%;background:#1a1205;animation:blink 1.4s infinite}
+  @keyframes blink{50%{opacity:.25}}
+  .node.orphan{border-color:var(--coral)}
+  .node .orphan-tag{
+    position:absolute;top:-9px;left:10px;font-size:8.5px;letter-spacing:.1em;
+    background:var(--coral);color:#2a0d0a;padding:2px 7px;border-radius:5px;font-weight:600;display:none;
+  }
+  .node.orphan .orphan-tag{display:block}
+  .dim .node:not(.hl){opacity:.22}
+  .dim #edges path:not(.hl){opacity:.08}
+  .node.hl{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber)}
+
+  /* edge styling */
+  #edges path{fill:none;stroke-width:1.6}
+  #edges path.observed{stroke:var(--sage)}
+  #edges path.declared{stroke:var(--blue);stroke-dasharray:5 5;opacity:.65}
+  #edges path.unreachable{stroke:var(--coral);stroke-dasharray:2 5;opacity:.7}
+  #edges path.hl{stroke-width:2.4;opacity:1}
+
+  /* canvas overlay controls */
+  .legend{
+    position:absolute;left:14px;bottom:14px;z-index:6;background:rgba(20,23,29,.86);
+    border:1px solid var(--border);border-radius:9px;padding:11px 13px;backdrop-filter:blur(6px);
+    display:flex;flex-direction:column;gap:8px;
+  }
+  .legend .row{display:flex;align-items:center;gap:9px;cursor:pointer;font-size:10.5px;color:var(--muted);letter-spacing:.03em}
+  .legend .row.off{opacity:.4}
+  .legend .swatch{width:22px;height:0;border-top-width:2px;border-top-style:solid}
+  .legend .sw-observed{border-color:var(--sage)}
+  .legend .sw-declared{border-color:var(--blue);border-top-style:dashed}
+  .legend .sw-unreachable{border-color:var(--coral);border-top-style:dashed}
+  .legend .hint{font-size:9px;color:var(--muted-2);margin-top:2px;letter-spacing:.04em}
+
+  .viewctl{position:absolute;right:14px;bottom:14px;z-index:6;display:flex;gap:7px}
+  .viewctl button{
+    background:rgba(20,23,29,.86);border:1px solid var(--border);color:var(--muted);
+    width:30px;height:30px;border-radius:7px;cursor:pointer;font-size:14px;backdrop-filter:blur(6px);
+  }
+  .viewctl button:hover{color:var(--text);border-color:var(--border-2)}
+
+  /* ---- right panel ---- */
+  .panel{background:var(--bg-2);border-left:1px solid var(--border);display:grid;grid-template-rows:auto 1fr;min-height:0}
+  .tabs{display:flex;border-bottom:1px solid var(--border)}
+  .tabs button{
+    flex:1;background:none;border:none;color:var(--muted);padding:13px 0;cursor:pointer;
+    font-family:inherit;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    border-bottom:2px solid transparent;
+  }
+  .tabs button.active{color:var(--text);border-bottom-color:var(--amber)}
+  .pane{overflow-y:auto;padding:18px;min-height:0}
+  .pane::-webkit-scrollbar{width:8px}
+  .pane::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:4px}
+
+  /* agent pane */
+  .agent-intro{font-size:14px;line-height:1.5;color:var(--muted)}
+  .agent-intro b{color:var(--text);font-weight:500}
+  .chips{display:flex;flex-direction:column;gap:8px;margin:16px 0 6px}
+  .chip{
+    text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:8px;
+    color:var(--text);padding:11px 13px;cursor:pointer;font-family:inherit;font-size:11.5px;
+    display:flex;align-items:center;gap:10px;transition:border-color .12s,background .12s;
+  }
+  .chip:hover{border-color:var(--border-2);background:var(--surface-2)}
+  .chip .q{color:var(--coral);font-weight:600}
+  .response{margin-top:18px;border-top:1px solid var(--border);padding-top:16px;display:none}
+  .response.show{display:block}
+  .response .label{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-2);margin-bottom:8px}
+  .response .answer{font-size:15px;line-height:1.55}
+  .response .answer em{color:var(--amber);font-style:normal}
+  .response .answer code{font-family:"Martian Mono",monospace;font-size:12px;color:var(--sage);background:var(--surface);padding:1px 5px;border-radius:4px}
+  .ctxblock{
+    margin-top:14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;
+    padding:12px;font-size:11px;line-height:1.7;
+  }
+  .ctxblock .ctitle{color:var(--muted);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
+  .ctxblock .file{color:var(--blue)}
+  .ctxblock .flow{color:var(--sage)}
+  .ctxblock .key{color:var(--coral)}
+
+  /* inspector pane */
+  .insp-empty{color:var(--muted-2);font-size:13px;line-height:1.6;margin-top:30px;text-align:center}
+  .insp-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .insp-head .name{font-size:17px;font-weight:600}
+  .insp-head .kind{font-size:9.5px;color:var(--muted-2);letter-spacing:.1em;text-transform:uppercase;margin-top:3px}
+  .badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+  .badge{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:5px;border:1px solid var(--border-2);color:var(--muted)}
+  .badge.live{background:rgba(255,203,107,.12);border-color:var(--amber);color:var(--amber)}
+  .badge.orphan{background:rgba(255,123,114,.12);border-color:var(--coral);color:var(--coral)}
+  .field{margin-top:16px}
+  .field .k{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-2);margin-bottom:5px}
+  .field .v{font-size:12px;color:var(--text)}
+  .field .v.route{color:var(--sage)}
+  .field .v.vm{color:var(--blue)}
+  .filelist,.taglist{display:flex;flex-direction:column;gap:4px}
+  .filelist span{font-size:11px;color:var(--muted)}
+  .taglist{flex-direction:row;flex-wrap:wrap;gap:5px}
+  .taglist span{font-size:10px;color:var(--purple);border:1px solid var(--border);border-radius:4px;padding:2px 6px}
+  .actions{display:flex;gap:8px;margin-top:20px}
+  .btn{
+    flex:1;font-family:inherit;font-size:11px;letter-spacing:.04em;padding:10px;border-radius:7px;cursor:pointer;
+    border:1px solid var(--border-2);background:var(--surface);color:var(--text);
+  }
+  .btn:hover{border-color:var(--amber)}
+  .btn.primary{background:var(--amber);color:#1a1205;border-color:var(--amber);font-weight:600}
+  .btn.primary:hover{filter:brightness(1.08)}
+  .model-peek{margin-top:20px}
+  .model-peek .k{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-2);margin-bottom:7px;display:flex;justify-content:space-between}
+  .model-peek .k em{font-style:normal;color:var(--muted-2);text-transform:none;letter-spacing:0;font-size:9px}
+  pre.json{
+    background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;
+    font-size:10.5px;line-height:1.65;overflow-x:auto;white-space:pre;
+  }
+  pre.json .jk{color:var(--coral)}
+  pre.json .js{color:var(--sage)}
+  pre.json .jn{color:var(--amber)}
+  pre.json .jp{color:var(--muted-2)}
+
+  /* toast */
+  #toast{
+    position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
+    background:var(--surface-2);border:1px solid var(--border-2);border-radius:9px;
+    padding:11px 18px;font-size:11.5px;color:var(--text);opacity:0;pointer-events:none;
+    transition:opacity .2s,transform .2s;z-index:30;box-shadow:0 8px 30px rgba(0,0,0,.5);
+    display:flex;align-items:center;gap:9px;
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  #toast .ic{color:var(--amber)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <span class="mark"></span>
+      <h1>Atlas</h1>
+      <span class="sub">Agentic App Map</span>
+    </div>
+    <div class="spacer"></div>
+    <div class="pill"><span class="app-name">RoundsApp.Mobile</span></div>
+    <div class="pill"><span class="dot live"></span> Runtime · connected</div>
+  </div>
+
+  <div class="body">
+    <div class="canvas-wrap" id="canvasWrap">
+      <div id="world">
+        <svg id="edges"></svg>
+        <!-- nodes injected -->
+      </div>
+
+      <div class="legend" id="legend">
+        <div class="row" data-layer="observed"><span class="swatch sw-observed"></span> Observed <span style="margin-left:auto;color:var(--muted-2)">runtime</span></div>
+        <div class="row" data-layer="declared"><span class="swatch sw-declared"></span> Declared <span style="margin-left:auto;color:var(--muted-2)">route map</span></div>
+        <div class="row" data-layer="unreachable"><span class="swatch sw-unreachable"></span> Unreachable <span style="margin-left:auto;color:var(--muted-2)">dead</span></div>
+        <div class="hint">click to toggle layers</div>
+      </div>
+
+      <div class="viewctl">
+        <button id="zoomOut" title="Zoom out">−</button>
+        <button id="zoomIn" title="Zoom in">+</button>
+        <button id="resetView" title="Reset view">⊡</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="tabs">
+        <button id="tabAgent" class="active">Agent</button>
+        <button id="tabInspector">Inspector</button>
+      </div>
+
+      <div class="pane" id="paneAgent">
+        <p class="agent-intro serif">The agent reads the same graph you see. Ask it about the structure of <b>RoundsApp</b>, or point it at a screen to scope an edit.</p>
+        <div class="chips" id="chips"></div>
+        <div class="response" id="agentResponse">
+          <div class="label">Agent</div>
+          <div class="answer serif" id="answerText"></div>
+          <div id="answerCtx"></div>
+        </div>
+      </div>
+
+      <div class="pane serif" id="paneInspector" style="display:none">
+        <div class="insp-empty" id="inspEmpty">Select a node on the canvas to inspect its view, view-model, route, and the model the agent receives.</div>
+        <div id="inspBody" style="display:none;font-family:'Martian Mono',monospace"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"><span class="ic">●</span><span id="toastMsg"></span></div>
+
+<script>
+/* ---------- structured app-model (the artifact the agent consumes) ---------- */
+const NODES = [
+  {id:"login",  name:"Login",            kind:"page",   route:"login",            vm:"LoginModel",            x:60,  y:330, status:"normal",
+   files:["Views/LoginPage.xaml","Presentation/LoginModel.cs"], elements:["TextBox Email","PasswordBox Pin","Button SignIn"], tokens:["Surface","AccentBrush"], summary:"Pin-based auth entry."},
+  {id:"shell",  name:"AppShell",         kind:"shell",  route:"",                 vm:"ShellModel",            x:312, y:330, status:"normal",
+   files:["Views/AppShell.xaml","Presentation/ShellModel.cs"], elements:["NavigationView","TabBar"], tokens:["NavigationViewExpanded"], summary:"Root region. Hosts the tabbed nurse workspace."},
+  {id:"dash",   name:"Dashboard",        kind:"page",   route:"dashboard",        vm:"DashboardModel",        x:586, y:172, status:"normal",
+   files:["Views/DashboardPage.xaml","Presentation/DashboardModel.cs"], elements:["ItemsRepeater Shifts","Card AlertsSummary"], tokens:["CardBackground","BodyStrong"], summary:"Shift overview and unread alerts."},
+  {id:"qvitals",name:"QuickVitals",      kind:"dialog", route:"dashboard/quick",  vm:"QuickVitalsModel",      x:586, y:330, status:"normal",
+   files:["Views/QuickVitalsSheet.xaml","Presentation/QuickVitalsModel.cs"], elements:["NumberBox HR","NumberBox SpO2","Button Save"], tokens:["FlyoutPresenter","AccentBrush"], summary:"Fast vitals capture from the dashboard."},
+  {id:"settings",name:"Settings",        kind:"page",   route:"settings",         vm:"SettingsModel",         x:586, y:500, status:"normal",
+   files:["Views/SettingsPage.xaml","Presentation/SettingsModel.cs"], elements:["ToggleSwitch Sync","ComboBox Unit"], tokens:["Surface","BodyStrong"], summary:"Sync, units, and sign-out."},
+  {id:"plist", name:"PatientList",       kind:"page",   route:"patients",         vm:"PatientListModel",      x:858, y:104, status:"normal",
+   files:["Views/PatientListPage.xaml","Presentation/PatientListModel.cs"], elements:["ListView Patients","SearchBox"], tokens:["ListViewItemRevealStyle"], summary:"Assigned patients for the shift."},
+  {id:"handoff",name:"HandoffReport",    kind:"page",   route:"handoff",          vm:"HandoffModel",          x:858, y:520, status:"orphan",
+   files:["Views/HandoffReportPage.xaml","Presentation/HandoffModel.cs"], elements:["RichEditBox Summary","Button Export"], tokens:["Surface"], summary:"End-of-shift handoff. Route registered, no entry point."},
+  {id:"pdetail",name:"PatientDetail",    kind:"page",   route:"patients/{id}",    vm:"PatientDetailModel",    x:1130,y:104, status:"live",
+   files:["Views/PatientDetailPage.xaml","Presentation/PatientDetailModel.cs"], elements:["Pivot Sections","CommandBar Actions"], tokens:["PivotHeaderItem","AccentBrush"], summary:"Patient chart hub. Branches to all care actions."},
+  {id:"rounding",name:"RoundingChecklist",kind:"page",  route:"patients/{id}/rounding",vm:"RoundingModel",   x:1408,y:8,   status:"normal",
+   files:["Views/RoundingChecklistPage.xaml","Presentation/RoundingModel.cs"], elements:["ItemsControl Steps","Button Complete"], tokens:["CheckBox","CardBackground"], summary:"Structured rounding steps."},
+  {id:"vitals", name:"VitalsEntry",      kind:"page",   route:"patients/{id}/vitals",vm:"VitalsEntryModel",  x:1408,y:142, status:"normal",
+   files:["Views/VitalsEntryPage.xaml","Presentation/VitalsEntryModel.cs"], elements:["NumberBox HR","NumberBox BP","CommandBar Save"], tokens:["Surface","AccentBrush"], summary:"Full vitals form with validation."},
+  {id:"meds",   name:"MedAdministration",kind:"page",   route:"patients/{id}/meds",  vm:"MedAdminModel",     x:1408,y:276, status:"normal",
+   files:["Views/MedAdministrationPage.xaml","Presentation/MedAdminModel.cs"], elements:["ListView Orders","Button Scan","Button Confirm"], tokens:["InfoBar","AccentBrush"], summary:"Barcode med administration. Declared, never run this session."},
+  {id:"notes",  name:"ClinicalNotes",    kind:"page",   route:"patients/{id}/notes", vm:"NotesModel",        x:1408,y:410, status:"normal",
+   files:["Views/ClinicalNotesPage.xaml","Presentation/NotesModel.cs"], elements:["RichEditBox Body","Button Sign"], tokens:["Surface","BodyStrong"], summary:"Free-text clinical notes."}
+];
+
+const EDGES = [
+  {from:"login",  to:"shell",    type:"observed",    trigger:"OnAuthenticated"},
+  {from:"shell",  to:"dash",     type:"observed",    trigger:"Region:default"},
+  {from:"shell",  to:"settings", type:"declared",    trigger:"SettingsCommand"},
+  {from:"dash",   to:"plist",    type:"observed",    trigger:"ViewAllPatients"},
+  {from:"dash",   to:"qvitals",  type:"observed",    trigger:"QuickVitalsFlyout"},
+  {from:"plist",  to:"pdetail",  type:"observed",    trigger:"SelectPatient(id)"},
+  {from:"pdetail",to:"rounding", type:"declared",    trigger:"StartRounding"},
+  {from:"pdetail",to:"vitals",   type:"observed",    trigger:"RecordVitals"},
+  {from:"pdetail",to:"meds",     type:"declared",    trigger:"AdministerMeds"},
+  {from:"pdetail",to:"notes",    type:"observed",    trigger:"AddNote"},
+  {from:"notes",  to:"vitals",   type:"unreachable", trigger:"BackToVitals (guard never true)"}
+];
+
+const QUERIES = [
+  {id:"orphans", q:"Find", rest:"orphaned screens",
+   nodes:["handoff"], edges:[],
+   answer:`One orphan. <em>HandoffReport</em> has a registered route (<code>handoff</code>) but no inbound navigation anywhere in the graph. It's reachable by deep link only — likely a missing entry from the Dashboard, or dead code from a removed flow.`},
+  {id:"paths", q:"Show", rest:"every path to Med Administration",
+   nodes:["login","shell","dash","plist","pdetail","meds"],
+   edges:["login>shell","shell>dash","dash>plist","plist>pdetail","pdetail>meds"],
+   answer:`A single path: <code>Login → AppShell → Dashboard → PatientList → PatientDetail → MedAdministration</code>. The final hop is <em>declared but never observed</em> this session — a high-risk medication flow with no runtime coverage. Worth a test before shipping.`},
+  {id:"dupes", q:"Detect", rest:"duplicated screens",
+   nodes:["vitals","qvitals"], edges:[],
+   answer:`<em>VitalsEntry</em> and <em>QuickVitals</em> capture the same fields (HR, BP/SpO2) through two different layouts and two view-models. Same job, divergent UI. Consolidate to one component with a compact mode, or the two will drift.`},
+  {id:"dead", q:"Find", rest:"unreachable routes",
+   nodes:["notes","vitals"], edges:["notes>vitals"],
+   answer:`<code>ClinicalNotes → VitalsEntry</code> is registered but its navigation guard can never evaluate true. Dead edge. Remove the route or fix the guard condition in <code>NotesModel</code>.`},
+  {id:"modify", q:"Scope", rest:"an edit to Vitals Entry",
+   nodes:["vitals"], edges:[], select:"vitals",
+   answer:`Here's the bounded context I'd take into the edit — just <em>VitalsEntry</em> and its immediate flow, not the whole repo.`,
+   ctx:true}
+];
+
+/* ---------- state ---------- */
+const NW=182, NH=78;
+const node = id => NODES.find(n=>n.id===id);
+let view={x:34,y:48,scale:.74};
+let selected=null;
+let layers={observed:true,declared:true,unreachable:true};
+const world=document.getElementById('world');
+const svg=document.getElementById('edges');
+const wrap=document.getElementById('canvasWrap');
+
+/* ---------- build nodes ---------- */
+NODES.forEach(n=>{
+  const el=document.createElement('div');
+  el.className=`node kind-${n.kind}`+(n.status==='live'?' live':'')+(n.status==='orphan'?' orphan':'');
+  el.id='node-'+n.id;
+  el.style.left=n.x+'px'; el.style.top=n.y+'px';
+  el.innerHTML=`
+    <span class="live-tag">live</span>
+    <span class="orphan-tag">orphan</span>
+    <div class="kind">${n.kind}</div>
+    <div class="name">${n.name}</div>
+    <div class="route">/${n.route||'·'}</div>
+    <div class="vm">${n.vm}</div>`;
+  world.appendChild(el);
+});
+
+/* ---------- edges ---------- */
+function anchors(a,b){
+  const ax=a.x+NW, ay=a.y+NH/2;       // right-center of source
+  let bx=b.x, by=b.y+NH/2;            // left-center of target
+  // back-edges (target left of source): route from bottom to bottom
+  if(b.x < a.x){ return {x1:a.x+NW/2,y1:a.y+NH, x2:b.x+NW/2,y2:b.y+NH, back:true}; }
+  return {x1:ax,y1:ay,x2:bx,y2:by,back:false};
+}
+function edgePath(e){
+  const a=node(e.from), b=node(e.to);
+  const p=anchors(a,b);
+  if(p.back){
+    const dip=Math.max(p.y1,p.y2)+70;
+    return `M ${p.x1} ${p.y1} C ${p.x1} ${dip}, ${p.x2} ${dip}, ${p.x2} ${p.y2}`;
+  }
+  const dx=Math.max(46,Math.abs(p.x2-p.x1)*0.5);
+  return `M ${p.x1} ${p.y1} C ${p.x1+dx} ${p.y1}, ${p.x2-dx} ${p.y2}, ${p.x2} ${p.y2}`;
+}
+function buildEdges(){
+  let markers=`<defs>
+    ${['observed','declared','unreachable'].map(t=>`
+    <marker id="ah-${t}" markerWidth="7" markerHeight="7" refX="6" refY="3.2" orient="auto">
+      <path d="M0,0 L6,3.2 L0,6.4 Z" fill="var(--${t==='observed'?'sage':t==='declared'?'blue':'coral'})"/>
+    </marker>`).join('')}
+  </defs>`;
+  let paths=EDGES.map((e,i)=>{
+    return `<path d="${edgePath(e)}" class="${e.type}" data-edge="${e.from}>${e.to}" marker-end="url(#ah-${e.type})"></path>`;
+  }).join('');
+  svg.innerHTML=markers+paths;
+  svg.setAttribute('width',1700); svg.setAttribute('height',640);
+  applyLayers();
+}
+
+function applyLayers(){
+  svg.querySelectorAll('path[data-edge]').forEach(p=>{
+    const cls=[...p.classList].find(c=>['observed','declared','unreachable'].includes(c));
+    p.style.display=layers[cls]?'':'none';
+  });
+}
+
+/* ---------- transform ---------- */
+function applyTransform(){ world.style.transform=`translate(${view.x}px,${view.y}px) scale(${view.scale})`; }
+
+/* ---------- pan & zoom ---------- */
+let drag=null;
+wrap.addEventListener('mousedown',e=>{
+  const nodeEl=e.target.closest('.node');
+  if(nodeEl){
+    const n=node(nodeEl.id.replace('node-',''));
+    drag={mode:'node',n,el:nodeEl,sx:e.clientX,sy:e.clientY,ox:n.x,oy:n.y,moved:false};
+  }else{
+    drag={mode:'pan',sx:e.clientX,sy:e.clientY,ox:view.x,oy:view.y,moved:false};
+    wrap.classList.add('panning');
+  }
+});
+window.addEventListener('mousemove',e=>{
+  if(!drag) return;
+  const dx=e.clientX-drag.sx, dy=e.clientY-drag.sy;
+  if(Math.abs(dx)+Math.abs(dy)>3) drag.moved=true;
+  if(drag.mode==='pan'){ view.x=drag.ox+dx; view.y=drag.oy+dy; applyTransform(); }
+  else{
+    drag.n.x=drag.ox+dx/view.scale; drag.n.y=drag.oy+dy/view.scale;
+    drag.el.style.left=drag.n.x+'px'; drag.el.style.top=drag.n.y+'px';
+    buildEdges(); if(activeQuery) paintQuery(activeQuery,true);
+  }
+});
+let lastMoved=false;
+window.addEventListener('mouseup',e=>{
+  if(drag){
+    wrap.classList.remove('panning');
+    lastMoved=drag.moved;
+    if(drag.mode==='node' && !drag.moved) selectNode(drag.n.id);
+    drag=null;
+  }
+});
+wrap.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const rect=wrap.getBoundingClientRect();
+  const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+  const wx=(mx-view.x)/view.scale, wy=(my-view.y)/view.scale;
+  const f=e.deltaY<0?1.12:1/1.12;
+  view.scale=Math.min(1.8,Math.max(.35,view.scale*f));
+  view.x=mx-wx*view.scale; view.y=my-wy*view.scale;
+  applyTransform();
+},{passive:false});
+
+document.getElementById('zoomIn').onclick=()=>zoomBy(1.15);
+document.getElementById('zoomOut').onclick=()=>zoomBy(1/1.15);
+document.getElementById('resetView').onclick=()=>{view={x:34,y:48,scale:.74};applyTransform()};
+function zoomBy(f){
+  const cx=wrap.clientWidth/2, cy=wrap.clientHeight/2;
+  const wx=(cx-view.x)/view.scale, wy=(cy-view.y)/view.scale;
+  view.scale=Math.min(1.8,Math.max(.35,view.scale*f));
+  view.x=cx-wx*view.scale; view.y=cy-wy*view.scale; applyTransform();
+}
+
+/* ---------- legend toggles ---------- */
+document.querySelectorAll('#legend .row').forEach(r=>{
+  r.onclick=()=>{ const l=r.dataset.layer; layers[l]=!layers[l]; r.classList.toggle('off',!layers[l]); applyLayers(); };
+});
+
+/* ---------- selection / inspector ---------- */
+function selectNode(id){
+  selected=id;
+  document.querySelectorAll('.node').forEach(n=>n.classList.toggle('selected',n.id==='node-'+id));
+  renderInspector(id);
+  switchTab('inspector');
+}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+function jsonModel(n){
+  const inn=EDGES.filter(e=>e.to===n.id).length, out=EDGES.filter(e=>e.from===n.id).length;
+  const line=(k,v,t)=> `  <span class="jk">"${k}"</span><span class="jp">:</span> ${t==='s'?`<span class="js">"${v}"</span>`:t==='n'?`<span class="jn">${v}</span>`:v}`;
+  return `<span class="jp">{</span>
+${line('id',n.id,'s')},
+${line('route',n.route||'','s')},
+${line('view',n.files[0].split('/').pop(),'s')},
+${line('viewModel',n.vm,'s')},
+${line('status',n.status,'s')},
+${line('inbound',inn,'n')}<span class="jp">,</span>
+${line('outbound',out,'n')}
+<span class="jp">}</span>`;
+}
+function renderInspector(id){
+  const n=node(id);
+  document.getElementById('inspEmpty').style.display='none';
+  const b=document.getElementById('inspBody'); b.style.display='block';
+  const inEdges=EDGES.filter(e=>e.to===id), outEdges=EDGES.filter(e=>e.from===id);
+  b.innerHTML=`
+   <div class="insp-head">
+     <div><div class="name">${n.name}</div><div class="kind">${n.kind} · ${n.summary}</div></div>
+   </div>
+   <div class="badges">
+     ${n.status==='live'?'<span class="badge live">● live now</span>':''}
+     ${n.status==='orphan'?'<span class="badge orphan">no inbound route</span>':''}
+     <span class="badge">${inEdges.length} in · ${outEdges.length} out</span>
+   </div>
+   <div class="field"><div class="k">Route</div><div class="v route">/${n.route||'·'}</div></div>
+   <div class="field"><div class="k">View-model</div><div class="v vm">${n.vm}</div></div>
+   <div class="field"><div class="k">Files</div><div class="filelist">${n.files.map(f=>`<span>${f}</span>`).join('')}</div></div>
+   <div class="field"><div class="k">Key elements</div><div class="filelist">${n.elements.map(e=>`<span>${e}</span>`).join('')}</div></div>
+   <div class="field"><div class="k">Theme tokens</div><div class="taglist">${n.tokens.map(t=>`<span>${t}</span>`).join('')}</div></div>
+   <div class="actions">
+     <button class="btn" onclick="jump('${n.name}')">Jump to (live)</button>
+     <button class="btn primary" onclick="modify('${n.id}')">Ask agent to modify</button>
+   </div>
+   <div class="model-peek">
+     <div class="k">Model the agent receives <em>same object, as JSON</em></div>
+     <pre class="json">${jsonModel(n)}</pre>
+   </div>`;
+}
+
+/* ---------- agent queries ---------- */
+let activeQuery=null;
+const chips=document.getElementById('chips');
+QUERIES.forEach(Q=>{
+  const c=document.createElement('button');
+  c.className='chip';
+  c.innerHTML=`<span class="q">${Q.q}</span> ${Q.rest}`;
+  c.onclick=()=>runQuery(Q.id);
+  chips.appendChild(c);
+});
+
+function paintQuery(Q,keep){
+  world.classList.add('dim');
+  document.querySelectorAll('.node').forEach(n=>n.classList.remove('hl'));
+  svg.querySelectorAll('path').forEach(p=>p.classList.remove('hl'));
+  Q.nodes.forEach(id=>document.getElementById('node-'+id)?.classList.add('hl'));
+  Q.edges.forEach(key=>{ const p=svg.querySelector(`path[data-edge="${key}"]`); if(p) p.classList.add('hl'); });
+}
+function runQuery(qid){
+  const Q=QUERIES.find(x=>x.id===qid); activeQuery=Q;
+  switchTab('agent');
+  paintQuery(Q);
+  const r=document.getElementById('agentResponse'); r.classList.add('show');
+  document.getElementById('answerText').innerHTML=Q.answer;
+  const ctxEl=document.getElementById('answerCtx');
+  if(Q.ctx){
+    const n=node('vitals');
+    ctxEl.innerHTML=`<div class="ctxblock">
+      <div class="ctitle">Scoped context handed to the agent</div>
+      <div class="file">${n.files.join('<br>')}</div>
+      <div style="margin-top:8px" class="flow">flow in:  PatientDetail —RecordVitals→ VitalsEntry</div>
+      <div class="flow">flow out: (leaf)</div>
+      <div style="margin-top:8px" class="key">match design tokens: ${n.tokens.join(', ')}</div>
+      <div style="margin-top:8px;color:var(--muted-2)">11 nodes in repo · 2 files in scope · 0 unrelated files touched</div>
+    </div>`;
+    if(Q.select) selectNode(Q.select);
+  } else ctxEl.innerHTML='';
+}
+function clearQuery(){
+  activeQuery=null; world.classList.remove('dim');
+  document.querySelectorAll('.node').forEach(n=>n.classList.remove('hl'));
+  svg.querySelectorAll('path').forEach(p=>p.classList.remove('hl'));
+  document.getElementById('agentResponse').classList.remove('show');
+}
+
+/* ---------- tabs ---------- */
+function switchTab(which){
+  const a=which==='agent';
+  document.getElementById('tabAgent').classList.toggle('active',a);
+  document.getElementById('tabInspector').classList.toggle('active',!a);
+  document.getElementById('paneAgent').style.display=a?'':'none';
+  document.getElementById('paneInspector').style.display=a?'none':'';
+}
+document.getElementById('tabAgent').onclick=()=>switchTab('agent');
+document.getElementById('tabInspector').onclick=()=>switchTab('inspector');
+
+/* ---------- actions ---------- */
+function jump(name){ toast(`Navigated running app → ${name}`); }
+function modify(id){ runQuery('modify'); selectNode(id); toast(`Scoped edit context prepared for ${node(id).name}`); }
+let toastT;
+function toast(msg){
+  const t=document.getElementById('toast');
+  document.getElementById('toastMsg').textContent=msg;
+  t.classList.add('show'); clearTimeout(toastT);
+  toastT=setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+/* clear query when clicking empty canvas */
+wrap.addEventListener('click',e=>{ if(!e.target.closest('.node') && !lastMoved && activeQuery) clearQuery(); lastMoved=false; });
+
+/* ---------- init ---------- */
+buildEdges();
+applyTransform();
+</script>
+</body>
+</html>

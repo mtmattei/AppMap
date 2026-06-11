@@ -1,0 +1,10 @@
+{
+  "background_color": "#ffffff",
+  "description": "Atlas.App",
+  "display": "standalone",
+  "name": "Atlas.App",
+  "short_name": "Atlas.App",
+  "start_url": "/index.html",
+  "theme_color": "#ffffff",
+  "scope": "/"
+}
