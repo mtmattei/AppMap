@@ -5,14 +5,17 @@ namespace Atlas.Core;
 
 public static class AppModelJson
 {
-    public static JsonSerializerOptions Options { get; } = CreateOptions();
+    public static JsonSerializerOptions Options { get; } = CreateOptions(indented: true);
 
-    private static JsonSerializerOptions CreateOptions()
+    /// <summary>Single-line variant for NDJSON channels — one message per line.</summary>
+    public static JsonSerializerOptions Compact { get; } = CreateOptions(indented: false);
+
+    private static JsonSerializerOptions CreateOptions(bool indented)
     {
         var options = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = true,
+            WriteIndented = indented,
         };
         options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
         return options;
