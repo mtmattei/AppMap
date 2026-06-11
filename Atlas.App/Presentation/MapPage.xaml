@@ -102,7 +102,10 @@
                     <controls:EdgeLayer Source="{Binding Data}"
                                         ObservedBrush="{StaticResource AtlasObservedBrush}"
                                         DeclaredBrush="{StaticResource AtlasDeclaredBrush}"
-                                        UnreachableBrush="{StaticResource AtlasUnreachableBrush}" />
+                                        UnreachableBrush="{StaticResource AtlasUnreachableBrush}"
+                                        ShowObserved="{Binding DataContext.ShowObserved, ElementName=Root, Mode=OneWay}"
+                                        ShowDeclared="{Binding DataContext.ShowDeclared, ElementName=Root, Mode=OneWay}"
+                                        ShowUnreachable="{Binding DataContext.ShowUnreachable, ElementName=Root, Mode=OneWay}" />
                     <ItemsRepeater ItemsSource="{Binding Data.Nodes}"
                                    utu:CommandExtensions.Command="{Binding DataContext.SelectNode, ElementName=Root}">
                       <ItemsRepeater.Layout>
@@ -119,6 +122,101 @@
               </mvux:FeedView.ValueTemplate>
             </mvux:FeedView>
           </utu:ZoomContentControl>
+
+          <!-- Legend: provenance layer toggles (line style + color per kind) -->
+          <Border HorizontalAlignment="Left"
+                  VerticalAlignment="Bottom"
+                  Margin="14"
+                  Background="{StaticResource AtlasPanelBrush}"
+                  BorderBrush="{StaticResource AtlasBorderBrush}"
+                  BorderThickness="1"
+                  CornerRadius="9"
+                  Padding="13,11">
+            <utu:AutoLayout Orientation="Vertical"
+                            Spacing="4">
+              <CheckBox IsChecked="{Binding ShowObserved, Mode=TwoWay}"
+                        MinWidth="0"
+                        AutomationProperties.Name="Toggle observed edges">
+                <utu:AutoLayout Orientation="Horizontal"
+                                Spacing="9"
+                                CounterAxisAlignment="Center">
+                  <Line X2="22"
+                        Stroke="{StaticResource AtlasObservedBrush}"
+                        StrokeThickness="2" />
+                  <TextBlock Text="Observed"
+                             Style="{StaticResource AtlasMonoMuted}" />
+                  <TextBlock Text="RUNTIME"
+                             Style="{StaticResource AtlasMonoCaption}" />
+                </utu:AutoLayout>
+              </CheckBox>
+              <CheckBox IsChecked="{Binding ShowDeclared, Mode=TwoWay}"
+                        MinWidth="0"
+                        AutomationProperties.Name="Toggle declared edges">
+                <utu:AutoLayout Orientation="Horizontal"
+                                Spacing="9"
+                                CounterAxisAlignment="Center">
+                  <Line X2="22"
+                        Stroke="{StaticResource AtlasDeclaredBrush}"
+                        StrokeThickness="2"
+                        StrokeDashArray="3,3" />
+                  <TextBlock Text="Declared"
+                             Style="{StaticResource AtlasMonoMuted}" />
+                  <TextBlock Text="ROUTE MAP"
+                             Style="{StaticResource AtlasMonoCaption}" />
+                </utu:AutoLayout>
+              </CheckBox>
+              <CheckBox IsChecked="{Binding ShowUnreachable, Mode=TwoWay}"
+                        MinWidth="0"
+                        AutomationProperties.Name="Toggle unreachable edges">
+                <utu:AutoLayout Orientation="Horizontal"
+                                Spacing="9"
+                                CounterAxisAlignment="Center">
+                  <Line X2="22"
+                        Stroke="{StaticResource AtlasUnreachableBrush}"
+                        StrokeThickness="2"
+                        StrokeDashArray="1,3" />
+                  <TextBlock Text="Unreachable"
+                             Style="{StaticResource AtlasMonoMuted}" />
+                  <TextBlock Text="DEAD"
+                             Style="{StaticResource AtlasMonoCaption}" />
+                </utu:AutoLayout>
+              </CheckBox>
+              <TextBlock Text="TOGGLE LAYERS"
+                         Style="{StaticResource AtlasMonoCaption}" />
+            </utu:AutoLayout>
+          </Border>
+
+          <!-- View controls (right margin clears the docked drawer) -->
+          <utu:AutoLayout Orientation="Horizontal"
+                          Spacing="7"
+                          HorizontalAlignment="Right"
+                          VerticalAlignment="Bottom"
+                          Margin="0,0,386,14">
+            <Button x:Name="ZoomOutButton"
+                    Content="−"
+                    Click="ZoomOut_Click"
+                    Style="{StaticResource OutlinedButtonStyle}"
+                    MinWidth="44"
+                    MinHeight="44"
+                    Padding="0"
+                    AutomationProperties.Name="Zoom out" />
+            <Button x:Name="ZoomInButton"
+                    Content="+"
+                    Click="ZoomIn_Click"
+                    Style="{StaticResource OutlinedButtonStyle}"
+                    MinWidth="44"
+                    MinHeight="44"
+                    Padding="0"
+                    AutomationProperties.Name="Zoom in" />
+            <Button x:Name="ZoomFitButton"
+                    Content="⊡"
+                    Click="ZoomFit_Click"
+                    Style="{StaticResource OutlinedButtonStyle}"
+                    MinWidth="44"
+                    MinHeight="44"
+                    Padding="0"
+                    AutomationProperties.Name="Fit map to view" />
+          </utu:AutoLayout>
         </Grid>
       </utu:DrawerControl.Content>
       <utu:DrawerControl.DrawerContent>
