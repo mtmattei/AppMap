@@ -2,6 +2,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Atlas.Core\Atlas.Core.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\samples\rounds-app-model.json" Link="Fixtures\rounds-app-model.json" LogicalName="Atlas.App.Fixtures.rounds-app-model.json" />
+  </ItemGroup>
   <PropertyGroup>
     <TargetFrameworks>net10.0-browserwasm;net10.0-desktop</TargetFrameworks>
 
