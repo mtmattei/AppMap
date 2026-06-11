@@ -32,6 +32,18 @@
     <Setter Property="Foreground" Value="{ThemeResource AtlasTextBrush}" />
   </Style>
 
+  <!-- Emphasized chrome text: node names, values -->
+  <Style x:Key="AtlasMonoStrong" TargetType="TextBlock" BasedOn="{StaticResource AtlasMonoBody}">
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <!-- Type names (view-models): blue, mirroring syntax-type color -->
+  <Style x:Key="AtlasMonoType" TargetType="TextBlock" BasedOn="{StaticResource LabelSmall}">
+    <Setter Property="FontFamily" Value="{StaticResource AtlasMonoFontFamily}" />
+    <Setter Property="Foreground" Value="{ThemeResource AtlasDeclaredBrush}" />
+    <Setter Property="Opacity" Value="0.7" />
+  </Style>
+
   <!-- Route paths: always sage, mirroring syntax-string color -->
   <Style x:Key="AtlasMonoRoute" TargetType="TextBlock" BasedOn="{StaticResource LabelMedium}">
     <Setter Property="FontFamily" Value="{StaticResource AtlasMonoFontFamily}" />

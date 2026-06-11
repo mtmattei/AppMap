@@ -7,7 +7,8 @@ public partial record MapModel(IAppModelSource ModelSource)
     // Named Graph because the MVUX generator reserves 'Model' on the generated ViewModel.
     public IFeed<AppModel> Graph => Feed.Async(ModelSource.LoadAsync);
 
-    public IState<AppNode?> Selected => State<AppNode?>.Empty(this);
+    // Empty state = no selection; MVUX models absence as None rather than null.
+    public IState<AppNode> Selected => State<AppNode>.Empty(this);
 
     public IState<bool> ShowDeclared => State.Value(this, () => true);
     public IState<bool> ShowObserved => State.Value(this, () => true);

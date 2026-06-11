@@ -1,9 +1,12 @@
 <Page x:Class="Atlas.App.Presentation.MapPage"
+      x:Name="Root"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:local="using:Atlas.App.Presentation"
+      xmlns:controls="using:Atlas.App.Presentation.Controls"
       xmlns:uen="using:Uno.Extensions.Navigation.UI"
       xmlns:utu="using:Uno.Toolkit.UI"
+      xmlns:mvux="using:Uno.Extensions.Reactive.UI"
       NavigationCacheMode="Required"
       Background="{ThemeResource AtlasCanvasBrush}">
 
@@ -26,22 +29,26 @@
       <utu:AutoLayout Orientation="Horizontal"
                       Spacing="10"
                       CounterAxisAlignment="Center">
-        <Border Width="14"
-                Height="14"
-                CornerRadius="3"
-                RenderTransformOrigin="0.5,0.5">
-          <Border.RenderTransform>
-            <RotateTransform Angle="45" />
-          </Border.RenderTransform>
-          <Border.Background>
-            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-              <GradientStop Color="{ThemeResource AtlasUnreachableColor}" Offset="0" />
-              <GradientStop Color="{ThemeResource AtlasDeclaredColor}" Offset="0.33" />
-              <GradientStop Color="{ThemeResource AtlasObservedColor}" Offset="0.66" />
-              <GradientStop Color="{ThemeResource AtlasShellColor}" Offset="1" />
-            </LinearGradientBrush>
-          </Border.Background>
-        </Border>
+        <!-- Sized wrapper: the 45° rotation otherwise overflows the layout slot -->
+        <Grid Width="22"
+              Height="22">
+          <Border Width="14"
+                  Height="14"
+                  CornerRadius="3"
+                  RenderTransformOrigin="0.5,0.5">
+            <Border.RenderTransform>
+              <RotateTransform Angle="45" />
+            </Border.RenderTransform>
+            <Border.Background>
+              <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="{ThemeResource AtlasUnreachableColor}" Offset="0" />
+                <GradientStop Color="{ThemeResource AtlasDeclaredColor}" Offset="0.33" />
+                <GradientStop Color="{ThemeResource AtlasObservedColor}" Offset="0.66" />
+                <GradientStop Color="{ThemeResource AtlasShellColor}" Offset="1" />
+              </LinearGradientBrush>
+            </Border.Background>
+          </Border>
+        </Grid>
         <TextBlock Text="ATLAS"
                    Style="{StaticResource AtlasMonoTitle}"
                    CharacterSpacing="140" />
@@ -72,12 +79,11 @@
     </utu:AutoLayout>
 
     <!-- Content: canvas with right drawer (drawer side is opposite of OpenDirection) -->
-    <utu:DrawerControl Grid.Row="1"
-                       OpenDirection="Left"
-                       DrawerDepth="372"
-                       FitToDrawerContent="False"
-                       IsOpen="True"
-                       IsLightDismissEnabled="False">
+    <!-- All drawer properties are set on Loaded: their changed callbacks dereference
+         template parts, so setting them at XAML parse time aborts page navigation
+         (Toolkit 8.4.2). -->
+    <utu:DrawerControl x:Name="PanelDrawer"
+                       Grid.Row="1">
       <utu:DrawerControl.Content>
         <Grid Background="{ThemeResource AtlasCanvasBrush}">
           <utu:ZoomContentControl x:Name="MapZoom"
@@ -87,11 +93,27 @@
                                   IsPanAllowed="True"
                                   HorizontalContentAlignment="Stretch"
                                   VerticalContentAlignment="Stretch">
-            <Canvas x:Name="MapCanvas"
-                    Width="1700"
-                    Height="640">
-              <!-- EdgeLayer and node ItemsRepeater land here in the next steps -->
-            </Canvas>
+            <mvux:FeedView Source="{Binding Graph}">
+              <mvux:FeedView.ValueTemplate>
+                <DataTemplate>
+                  <Canvas Width="1700"
+                          Height="660">
+                    <!-- EdgeLayer lands here in the next step -->
+                    <ItemsRepeater ItemsSource="{Binding Data.Nodes}"
+                                   utu:CommandExtensions.Command="{Binding DataContext.SelectNode, ElementName=Root}">
+                      <ItemsRepeater.Layout>
+                        <local:CanvasLayout />
+                      </ItemsRepeater.Layout>
+                      <ItemsRepeater.ItemTemplate>
+                        <DataTemplate>
+                          <controls:NodeCard />
+                        </DataTemplate>
+                      </ItemsRepeater.ItemTemplate>
+                    </ItemsRepeater>
+                  </Canvas>
+                </DataTemplate>
+              </mvux:FeedView.ValueTemplate>
+            </mvux:FeedView>
           </utu:ZoomContentControl>
         </Grid>
       </utu:DrawerControl.Content>
