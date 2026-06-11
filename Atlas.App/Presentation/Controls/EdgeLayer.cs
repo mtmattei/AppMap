@@ -37,6 +37,12 @@ public partial class EdgeLayer : Canvas
     public static readonly DependencyProperty ShowUnreachableProperty = DependencyProperty.Register(
         nameof(ShowUnreachable), typeof(bool), typeof(EdgeLayer), new PropertyMetadata(true, OnLayerChanged));
 
+    public static readonly DependencyProperty HighlightedNodeIdsProperty = DependencyProperty.Register(
+        nameof(HighlightedNodeIds), typeof(object), typeof(EdgeLayer), new PropertyMetadata(null, OnLayerChanged));
+
+    public static readonly DependencyProperty HighlightedEdgeKeysProperty = DependencyProperty.Register(
+        nameof(HighlightedEdgeKeys), typeof(object), typeof(EdgeLayer), new PropertyMetadata(null, OnLayerChanged));
+
     public AppModel? Source
     {
         get => (AppModel?)GetValue(SourceProperty);
@@ -79,6 +85,20 @@ public partial class EdgeLayer : Canvas
         set => SetValue(ShowUnreachableProperty, value);
     }
 
+    /// <summary>Node ids of the active query result; any highlight dims unrelated edges.</summary>
+    public object? HighlightedNodeIds
+    {
+        get => GetValue(HighlightedNodeIdsProperty);
+        set => SetValue(HighlightedNodeIdsProperty, value);
+    }
+
+    /// <summary>Edge keys ("from&gt;to") of the active query result.</summary>
+    public object? HighlightedEdgeKeys
+    {
+        get => GetValue(HighlightedEdgeKeysProperty);
+        set => SetValue(HighlightedEdgeKeysProperty, value);
+    }
+
     private static void OnLayerChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) =>
         ((EdgeLayer)d).Rebuild();
 
@@ -95,6 +115,10 @@ public partial class EdgeLayer : Canvas
             .Where(n => n.Position is not null)
             .ToDictionary(n => n.Id);
 
+        var edgeKeys = HighlightedEdgeKeys as IReadOnlyList<string>;
+        var nodeIds = HighlightedNodeIds as IReadOnlyList<string>;
+        var highlightActive = (edgeKeys?.Count ?? 0) > 0 || (nodeIds?.Count ?? 0) > 0;
+
         foreach (var edge in model.Edges)
         {
             if (!IsKindVisible(edge.Kind)
@@ -104,9 +128,12 @@ public partial class EdgeLayer : Canvas
                 continue;
             }
 
-            AddEdge(edge, from.Position!, to.Position!);
+            var isHighlighted = edgeKeys?.Contains(EdgeKey(edge)) == true;
+            AddEdge(edge, from.Position!, to.Position!, isHighlighted, highlightActive);
         }
     }
+
+    private static string EdgeKey(AppEdge edge) => GraphQueries.EdgeKey(edge);
 
     private bool IsKindVisible(EdgeKind kind) => kind switch
     {
@@ -116,7 +143,7 @@ public partial class EdgeLayer : Canvas
         _ => true,
     };
 
-    private void AddEdge(AppEdge edge, Atlas.Core.Point from, Atlas.Core.Point to)
+    private void AddEdge(AppEdge edge, Atlas.Core.Point from, Atlas.Core.Point to, bool isHighlighted, bool highlightActive)
     {
         // Forward edges run right-center -> left-center; back edges dip below both nodes.
         Windows.Foundation.Point start, end, control1, control2;
@@ -139,6 +166,14 @@ public partial class EdgeLayer : Canvas
         }
 
         var (brush, dashes, opacity) = StyleFor(edge.Kind);
+        if (isHighlighted)
+        {
+            opacity = 1.0;
+        }
+        else if (highlightActive)
+        {
+            opacity = 0.08;
+        }
 
         var figure = new PathFigure { StartPoint = start };
         figure.Segments.Add(new BezierSegment { Point1 = control1, Point2 = control2, Point3 = end });
@@ -149,7 +184,7 @@ public partial class EdgeLayer : Canvas
         {
             Data = geometry,
             Stroke = brush,
-            StrokeThickness = StrokeWidth,
+            StrokeThickness = isHighlighted ? 2.4 : StrokeWidth,
             Opacity = opacity,
             Tag = edge,
         };

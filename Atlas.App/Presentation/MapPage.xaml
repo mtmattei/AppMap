@@ -14,6 +14,7 @@
     <local:UpperConverter x:Key="Upper" />
     <local:StatusVisibleConverter x:Key="StatusVisible" />
     <local:NodeJsonConverter x:Key="NodeJson" />
+    <local:IndexVisibleConverter x:Key="IndexVisible" />
   </Page.Resources>
 
   <Grid>
@@ -113,7 +114,9 @@
                                         UnreachableBrush="{StaticResource AtlasUnreachableBrush}"
                                         ShowObserved="{Binding DataContext.ShowObserved, ElementName=Root, Mode=OneWay}"
                                         ShowDeclared="{Binding DataContext.ShowDeclared, ElementName=Root, Mode=OneWay}"
-                                        ShowUnreachable="{Binding DataContext.ShowUnreachable, ElementName=Root, Mode=OneWay}" />
+                                        ShowUnreachable="{Binding DataContext.ShowUnreachable, ElementName=Root, Mode=OneWay}"
+                                        HighlightedNodeIds="{Binding DataContext.AgentResult.NodeIds, ElementName=Root, Mode=OneWay}"
+                                        HighlightedEdgeKeys="{Binding DataContext.AgentResult.EdgeKeys, ElementName=Root, Mode=OneWay}" />
                     <!-- Parent = the page VM exposed by FeedView's template state -->
                     <ItemsRepeater ItemsSource="{Binding Data.Nodes}"
                                    utu:CommandExtensions.Command="{Binding Parent.SelectNode}">
@@ -122,7 +125,8 @@
                       </ItemsRepeater.Layout>
                       <ItemsRepeater.ItemTemplate>
                         <DataTemplate>
-                          <controls:NodeCard SelectedId="{Binding DataContext.Selected.Id, ElementName=Root, Mode=OneWay}" />
+                          <controls:NodeCard SelectedId="{Binding DataContext.Selected.Id, ElementName=Root, Mode=OneWay}"
+                                             HighlightedIds="{Binding DataContext.AgentResult.NodeIds, ElementName=Root, Mode=OneWay}" />
                         </DataTemplate>
                       </ItemsRepeater.ItemTemplate>
                     </ItemsRepeater>
@@ -233,12 +237,79 @@
             Background="{StaticResource AtlasPanelBrush}"
             BorderBrush="{StaticResource AtlasBorderBrush}"
             BorderThickness="1,0,0,0">
-          <ScrollViewer>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+          </Grid.RowDefinitions>
+
+          <utu:TabBar x:Name="PanelTabs"
+                      SelectedIndex="0"
+                      Style="{StaticResource TopTabBarStyle}">
+            <utu:TabBarItem Content="AGENT"
+                            AutomationProperties.Name="Agent panel" />
+            <utu:TabBarItem Content="INSPECTOR"
+                            AutomationProperties.Name="Inspector panel" />
+          </utu:TabBar>
+
+          <!-- Agent pane -->
+          <ScrollViewer Grid.Row="1"
+                        Visibility="{Binding SelectedIndex, ElementName=PanelTabs, Converter={StaticResource IndexVisible}, ConverterParameter=0}">
             <utu:AutoLayout Orientation="Vertical"
                             Spacing="16"
                             Padding="18">
-              <TextBlock Text="INSPECTOR"
-                         Style="{StaticResource AtlasMonoCaption}" />
+              <TextBlock Text="The agent reads the same graph you see. Ask it about the structure of RoundsApp, or point it at a screen to scope an edit."
+                         Style="{StaticResource AtlasSerifProse}"
+                         Foreground="{StaticResource AtlasTextMutedBrush}" />
+              <utu:AutoLayout Orientation="Vertical"
+                              Spacing="8">
+                <utu:Chip Content="Find orphaned screens"
+                          Style="{StaticResource AssistChipStyle}"
+                          Command="{Binding FindOrphans}"
+                          AutomationProperties.Name="Find orphaned screens" />
+                <utu:Chip Content="Show every path to MedAdministration"
+                          Style="{StaticResource AssistChipStyle}"
+                          Command="{Binding FindPaths}"
+                          AutomationProperties.Name="Show every path to MedAdministration" />
+                <utu:Chip Content="Detect duplicated screens"
+                          Style="{StaticResource AssistChipStyle}"
+                          Command="{Binding FindDuplicates}"
+                          AutomationProperties.Name="Detect duplicated screens" />
+                <utu:Chip Content="Find unreachable routes"
+                          Style="{StaticResource AssistChipStyle}"
+                          Command="{Binding FindUnreachable}"
+                          AutomationProperties.Name="Find unreachable routes" />
+              </utu:AutoLayout>
+              <mvux:FeedView Source="{Binding AgentResult}">
+                <mvux:FeedView.ValueTemplate>
+                  <DataTemplate>
+                    <utu:AutoLayout Orientation="Vertical"
+                                    Spacing="10">
+                      <TextBlock Text="AGENT"
+                                 Style="{StaticResource AtlasMonoCaption}" />
+                      <TextBlock Text="{Binding Data.Answer}"
+                                 Style="{StaticResource AtlasSerifProse}" />
+                      <Button Content="Clear highlights"
+                              Style="{StaticResource TextButtonStyle}"
+                              Command="{Binding Parent.ClearHighlights}"
+                              AutomationProperties.Name="Clear highlights" />
+                    </utu:AutoLayout>
+                  </DataTemplate>
+                </mvux:FeedView.ValueTemplate>
+                <mvux:FeedView.NoneTemplate>
+                  <DataTemplate>
+                    <Grid />
+                  </DataTemplate>
+                </mvux:FeedView.NoneTemplate>
+              </mvux:FeedView>
+            </utu:AutoLayout>
+          </ScrollViewer>
+
+          <!-- Inspector pane -->
+          <ScrollViewer Grid.Row="1"
+                        Visibility="{Binding SelectedIndex, ElementName=PanelTabs, Converter={StaticResource IndexVisible}, ConverterParameter=1}">
+            <utu:AutoLayout Orientation="Vertical"
+                            Spacing="16"
+                            Padding="18">
               <mvux:FeedView Source="{Binding Selected}">
                 <mvux:FeedView.ValueTemplate>
                   <DataTemplate>

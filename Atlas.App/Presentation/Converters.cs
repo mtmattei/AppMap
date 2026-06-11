@@ -33,6 +33,18 @@ public sealed partial class UpperConverter : IValueConverter
         throw new NotSupportedException();
 }
 
+/// <summary>Visible when the bound index equals the converter parameter — drives tab panes.</summary>
+public sealed partial class IndexVisibleConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object parameter, string language) =>
+        string.Equals(value?.ToString(), parameter?.ToString(), StringComparison.Ordinal)
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language) =>
+        throw new NotSupportedException();
+}
+
 /// <summary>Serializes an AppNode to the JSON the agent receives — the inspector's model peek.</summary>
 public sealed partial class NodeJsonConverter : IValueConverter
 {
