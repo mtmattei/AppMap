@@ -1,0 +1,115 @@
+<Page x:Class="Atlas.App.Presentation.MapPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="using:Atlas.App.Presentation"
+      xmlns:uen="using:Uno.Extensions.Navigation.UI"
+      xmlns:utu="using:Uno.Toolkit.UI"
+      NavigationCacheMode="Required"
+      Background="{ThemeResource AtlasCanvasBrush}">
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <!-- Top bar -->
+    <utu:AutoLayout Orientation="Horizontal"
+                    Justify="SpaceBetween"
+                    CounterAxisAlignment="Center"
+                    Spacing="18"
+                    Padding="18,10"
+                    Background="{ThemeResource AtlasPanelBrush}"
+                    BorderBrush="{ThemeResource AtlasBorderBrush}"
+                    BorderThickness="0,0,0,1">
+
+      <utu:AutoLayout Orientation="Horizontal"
+                      Spacing="10"
+                      CounterAxisAlignment="Center">
+        <Border Width="14"
+                Height="14"
+                CornerRadius="3"
+                RenderTransformOrigin="0.5,0.5">
+          <Border.RenderTransform>
+            <RotateTransform Angle="45" />
+          </Border.RenderTransform>
+          <Border.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+              <GradientStop Color="{ThemeResource AtlasUnreachableColor}" Offset="0" />
+              <GradientStop Color="{ThemeResource AtlasDeclaredColor}" Offset="0.33" />
+              <GradientStop Color="{ThemeResource AtlasObservedColor}" Offset="0.66" />
+              <GradientStop Color="{ThemeResource AtlasShellColor}" Offset="1" />
+            </LinearGradientBrush>
+          </Border.Background>
+        </Border>
+        <TextBlock Text="ATLAS"
+                   Style="{StaticResource AtlasMonoTitle}"
+                   CharacterSpacing="140" />
+        <TextBlock Text="AGENTIC APP MAP"
+                   Style="{StaticResource AtlasMonoCaption}" />
+      </utu:AutoLayout>
+
+      <utu:AutoLayout Orientation="Horizontal"
+                      Spacing="8"
+                      CounterAxisAlignment="Center">
+        <Border CornerRadius="999"
+                Padding="11,5"
+                BorderBrush="{ThemeResource AtlasBorderBrush}"
+                BorderThickness="1">
+          <TextBlock x:Name="AppNamePill"
+                     Text="ROUNDSAPP.MOBILE"
+                     Style="{StaticResource AtlasMonoCaption}"
+                     Foreground="{ThemeResource AtlasTextBrush}" />
+        </Border>
+        <Border CornerRadius="999"
+                Padding="11,5"
+                BorderBrush="{ThemeResource AtlasBorderBrush}"
+                BorderThickness="1">
+          <TextBlock Text="STATIC · SAMPLE MODEL"
+                     Style="{StaticResource AtlasMonoCaption}" />
+        </Border>
+      </utu:AutoLayout>
+    </utu:AutoLayout>
+
+    <!-- Content: canvas with right drawer (drawer side is opposite of OpenDirection) -->
+    <utu:DrawerControl Grid.Row="1"
+                       OpenDirection="Left"
+                       DrawerDepth="372"
+                       FitToDrawerContent="False"
+                       IsOpen="True"
+                       IsLightDismissEnabled="False">
+      <utu:DrawerControl.Content>
+        <Grid Background="{ThemeResource AtlasCanvasBrush}">
+          <utu:ZoomContentControl x:Name="MapZoom"
+                                  MinZoomLevel="0.25"
+                                  MaxZoomLevel="3.0"
+                                  IsZoomAllowed="True"
+                                  IsPanAllowed="True"
+                                  HorizontalContentAlignment="Stretch"
+                                  VerticalContentAlignment="Stretch">
+            <Canvas x:Name="MapCanvas"
+                    Width="1700"
+                    Height="640">
+              <!-- EdgeLayer and node ItemsRepeater land here in the next steps -->
+            </Canvas>
+          </utu:ZoomContentControl>
+        </Grid>
+      </utu:DrawerControl.Content>
+      <utu:DrawerControl.DrawerContent>
+        <Grid Background="{ThemeResource AtlasPanelBrush}"
+              BorderBrush="{ThemeResource AtlasBorderBrush}"
+              BorderThickness="1,0,0,0">
+          <utu:AutoLayout Orientation="Vertical"
+                          Spacing="16"
+                          Padding="18">
+            <TextBlock Text="INSPECTOR"
+                       Style="{StaticResource AtlasMonoCaption}" />
+            <TextBlock Text="Select a node on the canvas to inspect its view, view-model, route, and the model the agent receives."
+                       Style="{StaticResource AtlasSerifProse}"
+                       Foreground="{ThemeResource AtlasTextMutedBrush}" />
+          </utu:AutoLayout>
+        </Grid>
+      </utu:DrawerControl.DrawerContent>
+    </utu:DrawerControl>
+  </Grid>
+</Page>
