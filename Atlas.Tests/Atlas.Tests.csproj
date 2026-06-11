@@ -22,4 +22,8 @@
     <ProjectReference Include="..\Atlas.Core\Atlas.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="..\samples\rounds-app-model.json" Link="fixtures\rounds-app-model.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
