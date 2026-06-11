@@ -33,6 +33,18 @@ public sealed partial class UpperConverter : IValueConverter
         throw new NotSupportedException();
 }
 
+/// <summary>Serializes an AppNode to the JSON the agent receives — the inspector's model peek.</summary>
+public sealed partial class NodeJsonConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object parameter, string language) =>
+        value is AppNode node
+            ? System.Text.Json.JsonSerializer.Serialize(node, AppModelJson.Options)
+            : string.Empty;
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language) =>
+        throw new NotSupportedException();
+}
+
 /// <summary>Visible when the NodeStatus name equals the converter parameter (e.g. 'Live', 'Orphan').</summary>
 public sealed partial class StatusVisibleConverter : IValueConverter
 {

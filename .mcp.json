@@ -11,7 +11,8 @@
         "dnx",
         "-y",
         "uno.devserver",
-        "--mcp-app"
+        "--mcp-app",
+        "--mcp-wait-tools-list"
       ]
     }
   }

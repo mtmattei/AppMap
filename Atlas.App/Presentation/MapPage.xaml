@@ -10,6 +10,12 @@
       NavigationCacheMode="Required"
       Background="{StaticResource AtlasCanvasBrush}">
 
+  <Page.Resources>
+    <local:UpperConverter x:Key="Upper" />
+    <local:StatusVisibleConverter x:Key="StatusVisible" />
+    <local:NodeJsonConverter x:Key="NodeJson" />
+  </Page.Resources>
+
   <Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
@@ -78,14 +84,16 @@
       </utu:AutoLayout>
     </utu:AutoLayout>
 
-    <!-- Content: canvas with right drawer (drawer side is opposite of OpenDirection) -->
-    <!-- All drawer properties are set on Loaded: their changed callbacks dereference
-         template parts, so setting them at XAML parse time aborts page navigation
-         (Toolkit 8.4.2). -->
-    <utu:DrawerControl x:Name="PanelDrawer"
-                       Grid.Row="1">
-      <utu:DrawerControl.Content>
-        <Grid Background="{StaticResource AtlasCanvasBrush}">
+    <!-- Content: canvas + docked panel. The panel is a fixed column on wide form factors
+         (SPEC); DrawerControl is reserved for narrow widths — while open it covers the
+         main content with a hit-test-visible light-dismiss overlay that blocks the canvas. -->
+    <Grid Grid.Row="1">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="372" />
+      </Grid.ColumnDefinitions>
+
+      <Grid Background="{StaticResource AtlasCanvasBrush}">
           <utu:ZoomContentControl x:Name="MapZoom"
                                   MinZoomLevel="0.25"
                                   MaxZoomLevel="3.0"
@@ -106,14 +114,15 @@
                                         ShowObserved="{Binding DataContext.ShowObserved, ElementName=Root, Mode=OneWay}"
                                         ShowDeclared="{Binding DataContext.ShowDeclared, ElementName=Root, Mode=OneWay}"
                                         ShowUnreachable="{Binding DataContext.ShowUnreachable, ElementName=Root, Mode=OneWay}" />
+                    <!-- Parent = the page VM exposed by FeedView's template state -->
                     <ItemsRepeater ItemsSource="{Binding Data.Nodes}"
-                                   utu:CommandExtensions.Command="{Binding DataContext.SelectNode, ElementName=Root}">
+                                   utu:CommandExtensions.Command="{Binding Parent.SelectNode}">
                       <ItemsRepeater.Layout>
                         <local:CanvasLayout />
                       </ItemsRepeater.Layout>
                       <ItemsRepeater.ItemTemplate>
                         <DataTemplate>
-                          <controls:NodeCard />
+                          <controls:NodeCard SelectedId="{Binding DataContext.Selected.Id, ElementName=Root, Mode=OneWay}" />
                         </DataTemplate>
                       </ItemsRepeater.ItemTemplate>
                     </ItemsRepeater>
@@ -186,12 +195,12 @@
             </utu:AutoLayout>
           </Border>
 
-          <!-- View controls (right margin clears the docked drawer) -->
+          <!-- View controls -->
           <utu:AutoLayout Orientation="Horizontal"
                           Spacing="7"
                           HorizontalAlignment="Right"
                           VerticalAlignment="Bottom"
-                          Margin="0,0,386,14">
+                          Margin="0,0,14,14">
             <Button x:Name="ZoomOutButton"
                     Content="−"
                     Click="ZoomOut_Click"
@@ -217,23 +226,170 @@
                     Padding="0"
                     AutomationProperties.Name="Fit map to view" />
           </utu:AutoLayout>
-        </Grid>
-      </utu:DrawerControl.Content>
-      <utu:DrawerControl.DrawerContent>
-        <Grid Background="{StaticResource AtlasPanelBrush}"
-              BorderBrush="{StaticResource AtlasBorderBrush}"
-              BorderThickness="1,0,0,0">
-          <utu:AutoLayout Orientation="Vertical"
-                          Spacing="16"
-                          Padding="18">
-            <TextBlock Text="INSPECTOR"
-                       Style="{StaticResource AtlasMonoCaption}" />
-            <TextBlock Text="Select a node on the canvas to inspect its view, view-model, route, and the model the agent receives."
-                       Style="{StaticResource AtlasSerifProse}"
-                       Foreground="{StaticResource AtlasTextMutedBrush}" />
-          </utu:AutoLayout>
-        </Grid>
-      </utu:DrawerControl.DrawerContent>
-    </utu:DrawerControl>
+      </Grid>
+
+      <!-- Docked panel -->
+      <Grid Grid.Column="1"
+            Background="{StaticResource AtlasPanelBrush}"
+            BorderBrush="{StaticResource AtlasBorderBrush}"
+            BorderThickness="1,0,0,0">
+          <ScrollViewer>
+            <utu:AutoLayout Orientation="Vertical"
+                            Spacing="16"
+                            Padding="18">
+              <TextBlock Text="INSPECTOR"
+                         Style="{StaticResource AtlasMonoCaption}" />
+              <mvux:FeedView Source="{Binding Selected}">
+                <mvux:FeedView.ValueTemplate>
+                  <DataTemplate>
+                    <utu:AutoLayout Orientation="Vertical"
+                                    Spacing="16">
+                      <utu:AutoLayout Orientation="Horizontal"
+                                      Justify="SpaceBetween"
+                                      CounterAxisAlignment="Start"
+                                      Spacing="10">
+                        <utu:AutoLayout Orientation="Vertical"
+                                        Spacing="3">
+                          <TextBlock Text="{Binding Data.Name}"
+                                     Style="{StaticResource AtlasMonoTitle}" />
+                          <TextBlock Text="{Binding Data.Kind, Converter={StaticResource Upper}}"
+                                     Style="{StaticResource AtlasMonoCaption}" />
+                        </utu:AutoLayout>
+                        <utu:AutoLayout Orientation="Horizontal"
+                                        Spacing="6">
+                          <Border CornerRadius="5"
+                                  Padding="8,3"
+                                  Background="{StaticResource AtlasLiveBrush}"
+                                  Visibility="{Binding Data.Status, Converter={StaticResource StatusVisible}, ConverterParameter=Live}">
+                            <TextBlock Text="LIVE"
+                                       Style="{StaticResource AtlasMonoCaption}"
+                                       Foreground="{StaticResource AtlasOnAccentBrush}" />
+                          </Border>
+                          <Border CornerRadius="5"
+                                  Padding="8,3"
+                                  Background="{StaticResource AtlasOrphanBrush}"
+                                  Visibility="{Binding Data.Status, Converter={StaticResource StatusVisible}, ConverterParameter=Orphan}">
+                            <TextBlock Text="ORPHAN"
+                                       Style="{StaticResource AtlasMonoCaption}"
+                                       Foreground="{StaticResource AtlasOnCoralBrush}" />
+                          </Border>
+                        </utu:AutoLayout>
+                      </utu:AutoLayout>
+
+                      <utu:AutoLayout Orientation="Vertical"
+                                      Spacing="5">
+                        <TextBlock Text="ROUTE"
+                                   Style="{StaticResource AtlasMonoCaption}" />
+                        <TextBlock Style="{StaticResource AtlasMonoRoute}">
+                          <Run Text="/" /><Run Text="{Binding Data.Route}" />
+                        </TextBlock>
+                      </utu:AutoLayout>
+
+                      <utu:AutoLayout Orientation="Vertical"
+                                      Spacing="5">
+                        <TextBlock Text="VIEW"
+                                   Style="{StaticResource AtlasMonoCaption}" />
+                        <TextBlock Text="{Binding Data.View}"
+                                   Style="{StaticResource AtlasMonoBody}" />
+                      </utu:AutoLayout>
+
+                      <utu:AutoLayout Orientation="Vertical"
+                                      Spacing="5">
+                        <TextBlock Text="VIEW-MODEL"
+                                   Style="{StaticResource AtlasMonoCaption}" />
+                        <TextBlock Text="{Binding Data.ViewModel}"
+                                   Style="{StaticResource AtlasMonoType}" />
+                      </utu:AutoLayout>
+
+                      <utu:AutoLayout Orientation="Vertical"
+                                      Spacing="5">
+                        <TextBlock Text="FILES"
+                                   Style="{StaticResource AtlasMonoCaption}" />
+                        <ItemsRepeater ItemsSource="{Binding Data.Files}">
+                          <ItemsRepeater.Layout>
+                            <StackLayout Orientation="Vertical"
+                                         Spacing="4" />
+                          </ItemsRepeater.Layout>
+                          <ItemsRepeater.ItemTemplate>
+                            <DataTemplate>
+                              <TextBlock Text="{Binding}"
+                                         Style="{StaticResource AtlasMonoMuted}" />
+                            </DataTemplate>
+                          </ItemsRepeater.ItemTemplate>
+                        </ItemsRepeater>
+                      </utu:AutoLayout>
+
+                      <utu:AutoLayout Orientation="Vertical"
+                                      Spacing="5">
+                        <TextBlock Text="ELEMENTS"
+                                   Style="{StaticResource AtlasMonoCaption}" />
+                        <ItemsRepeater ItemsSource="{Binding Data.Elements}">
+                          <ItemsRepeater.Layout>
+                            <StackLayout Orientation="Vertical"
+                                         Spacing="4" />
+                          </ItemsRepeater.Layout>
+                          <ItemsRepeater.ItemTemplate>
+                            <DataTemplate>
+                              <TextBlock Text="{Binding}"
+                                         Style="{StaticResource AtlasMonoMuted}" />
+                            </DataTemplate>
+                          </ItemsRepeater.ItemTemplate>
+                        </ItemsRepeater>
+                      </utu:AutoLayout>
+
+                      <utu:AutoLayout Orientation="Vertical"
+                                      Spacing="5">
+                        <TextBlock Text="THEME TOKENS"
+                                   Style="{StaticResource AtlasMonoCaption}" />
+                        <ItemsRepeater ItemsSource="{Binding Data.Tokens}">
+                          <ItemsRepeater.Layout>
+                            <StackLayout Orientation="Horizontal"
+                                         Spacing="5" />
+                          </ItemsRepeater.Layout>
+                          <ItemsRepeater.ItemTemplate>
+                            <DataTemplate>
+                              <Border BorderBrush="{StaticResource AtlasBorderBrush}"
+                                      BorderThickness="1"
+                                      CornerRadius="4"
+                                      Padding="6,2">
+                                <TextBlock Text="{Binding}"
+                                           Style="{StaticResource AtlasMonoCaption}"
+                                           Foreground="{StaticResource AtlasShellBrush}" />
+                              </Border>
+                            </DataTemplate>
+                          </ItemsRepeater.ItemTemplate>
+                        </ItemsRepeater>
+                      </utu:AutoLayout>
+
+                      <utu:AutoLayout Orientation="Vertical"
+                                      Spacing="7">
+                        <TextBlock Text="MODEL · AS THE AGENT SEES IT"
+                                   Style="{StaticResource AtlasMonoCaption}" />
+                        <Border Background="{StaticResource AtlasSurfaceBrush}"
+                                BorderBrush="{StaticResource AtlasBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="12">
+                          <TextBlock Text="{Binding Data, Converter={StaticResource NodeJson}}"
+                                     Style="{StaticResource AtlasMonoCaption}"
+                                     Foreground="{StaticResource AtlasTextMutedBrush}"
+                                     TextWrapping="Wrap" />
+                        </Border>
+                      </utu:AutoLayout>
+                    </utu:AutoLayout>
+                  </DataTemplate>
+                </mvux:FeedView.ValueTemplate>
+                <mvux:FeedView.NoneTemplate>
+                  <DataTemplate>
+                    <TextBlock Text="Select a node on the canvas to inspect its view, view-model, route, and the model the agent receives."
+                               Style="{StaticResource AtlasSerifProse}"
+                               Foreground="{StaticResource AtlasTextMutedBrush}" />
+                  </DataTemplate>
+                </mvux:FeedView.NoneTemplate>
+              </mvux:FeedView>
+            </utu:AutoLayout>
+          </ScrollViewer>
+      </Grid>
+    </Grid>
   </Grid>
 </Page>

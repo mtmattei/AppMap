@@ -16,7 +16,9 @@
 
   <!-- Card top stays at the model position so edge anchors line up; tags overlap upward. -->
   <Grid>
-    <utu:CardContentControl MinHeight="78"
+    <utu:CardContentControl x:Name="Card"
+                            HorizontalAlignment="Stretch"
+                            MinHeight="78"
                             Style="{StaticResource FilledCardContentControlStyle}"
                             Background="{StaticResource AtlasSurfaceBrush}"
                             BorderBrush="{StaticResource AtlasBorder2Brush}"
