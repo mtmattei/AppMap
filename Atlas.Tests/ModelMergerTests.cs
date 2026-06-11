@@ -67,6 +67,17 @@ public class ModelMergerTests
     }
 
     [Fact]
+    public void ApplyRoute_back_navigation_does_not_add_reverse_edge()
+    {
+        // plist -> pdetail exists; navigating pdetail -> plist is a back-nav.
+        var merged = ModelMerger.ApplyRoute(Model, "pdetail", "plist", DateTimeOffset.UtcNow);
+
+        Assert.Equal(NodeStatus.Live, merged.Nodes.Single(n => n.Id == "plist").Status);
+        Assert.DoesNotContain(merged.Edges, e => e.From == "pdetail" && e.To == "plist");
+        Assert.Equal(Model.Edges.Count, merged.Edges.Count);
+    }
+
+    [Fact]
     public void ApplyRoute_without_previous_node_only_moves_live()
     {
         var merged = ModelMerger.ApplyRoute(Model, null, "login", DateTimeOffset.UtcNow);

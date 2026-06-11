@@ -121,7 +121,12 @@
         <ColumnDefinition Width="372" />
       </Grid.ColumnDefinitions>
 
-      <Grid Background="{StaticResource AtlasCanvasBrush}">
+      <Grid x:Name="CanvasHost"
+            Background="{StaticResource AtlasCanvasBrush}"
+            PointerPressed="CanvasHost_PointerPressed"
+            PointerMoved="CanvasHost_PointerMoved"
+            PointerReleased="CanvasHost_PointerReleased"
+            PointerCaptureLost="CanvasHost_PointerCaptureLost">
           <utu:ZoomContentControl x:Name="MapZoom"
                                   MinZoomLevel="0.25"
                                   MaxZoomLevel="3.0"
@@ -154,7 +159,9 @@
                       <ItemsRepeater.ItemTemplate>
                         <DataTemplate>
                           <controls:NodeCard SelectedId="{Binding DataContext.Selected.Id, ElementName=Root, Mode=OneWay}"
-                                             HighlightedIds="{Binding DataContext.AgentResult.NodeIds, ElementName=Root, Mode=OneWay}" />
+                                             HighlightedIds="{Binding DataContext.AgentResult.NodeIds, ElementName=Root, Mode=OneWay}"
+                                             MoveCommand="{Binding DataContext.MoveNode, ElementName=Root, Mode=OneWay}"
+                                             DoubleTapped="NodeCard_DoubleTapped" />
                         </DataTemplate>
                       </ItemsRepeater.ItemTemplate>
                     </ItemsRepeater>

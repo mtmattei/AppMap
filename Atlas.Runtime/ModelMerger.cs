@@ -81,8 +81,10 @@ public static class ModelMerger
             {
                 edges[index] = edges[index] with { Kind = EdgeKind.Observed };
             }
-            else
+            else if (!edges.Any(e => e.From == toNodeId && e.To == fromNodeId))
             {
+                // Reverse of an existing edge = back navigation: move the live node,
+                // but don't invent a forward edge for it.
                 edges.Add(new AppEdge(fromNodeId, toNodeId, EdgeKind.Observed, Trigger: string.Empty));
             }
         }

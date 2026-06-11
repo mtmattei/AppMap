@@ -31,6 +31,12 @@ public partial record MapModel(IRuntimeBridge Bridge)
         await PanelTab.SetAsync(1, ct);
     }
 
+    public ValueTask MoveNode(NodeMove move, CancellationToken ct)
+    {
+        Bridge.MoveNode(move.NodeId, move.X, move.Y);
+        return default;
+    }
+
     public async ValueTask FindOrphans(CancellationToken ct) =>
         await RunQuery(GraphQueries.FindOrphans, ct);
 

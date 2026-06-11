@@ -9,4 +9,7 @@ public interface IRuntimeBridge
 
     /// <summary>The current agent-connection state followed by every change.</summary>
     IAsyncEnumerable<bool> Connection(CancellationToken ct);
+
+    /// <summary>Moves a node to a new canvas position and re-emits the model.</summary>
+    void MoveNode(string nodeId, double x, double y);
 }

@@ -131,6 +131,28 @@ public sealed class RuntimeBridge(IAppModelSource modelSource) : IRuntimeBridge,
         }
     }
 
+    public void MoveNode(string nodeId, double x, double y)
+    {
+        lock (_gate)
+        {
+            if (_current is not { } model)
+            {
+                return;
+            }
+
+            _current = model with
+            {
+                Nodes = model.Nodes
+                    .Select(n => n.Id == nodeId ? n with { Position = new Atlas.Core.Point(x, y) } : n)
+                    .ToList(),
+            };
+            foreach (var subscriber in _modelSubscribers)
+            {
+                subscriber.Writer.TryWrite(_current);
+            }
+        }
+    }
+
     private void OnConnectionChanged(object? sender, bool connected)
     {
         lock (_gate)
