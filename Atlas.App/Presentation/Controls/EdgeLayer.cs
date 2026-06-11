@@ -193,6 +193,7 @@ public partial class EdgeLayer : Canvas
             path.StrokeDashArray = dashes;
         }
 
+        ToolTipService.SetToolTip(path, $"{edge.Trigger} · {edge.Kind}");
         Children.Add(path);
         Children.Add(BuildArrowHead(end, control2, brush, opacity, edge));
     }

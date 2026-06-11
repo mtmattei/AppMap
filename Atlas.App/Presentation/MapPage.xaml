@@ -8,6 +8,7 @@
       xmlns:utu="using:Uno.Toolkit.UI"
       xmlns:mvux="using:Uno.Extensions.Reactive.UI"
       NavigationCacheMode="Required"
+      KeyboardAcceleratorPlacementMode="Hidden"
       Background="{StaticResource AtlasCanvasBrush}">
 
   <Page.Resources>
@@ -16,6 +17,22 @@
     <local:NodeJsonConverter x:Key="NodeJson" />
     <local:IndexVisibleConverter x:Key="IndexVisible" />
   </Page.Resources>
+
+  <!-- Canvas shortcuts, mirroring Hot Design: Ctrl+0 reset, Ctrl+9 fit, Ctrl+/- zoom -->
+  <Page.KeyboardAccelerators>
+    <KeyboardAccelerator Modifiers="Control"
+                         Key="Number0"
+                         Invoked="ResetView_Invoked" />
+    <KeyboardAccelerator Modifiers="Control"
+                         Key="Number9"
+                         Invoked="FitView_Invoked" />
+    <KeyboardAccelerator Modifiers="Control"
+                         Key="Add"
+                         Invoked="ZoomInKey_Invoked" />
+    <KeyboardAccelerator Modifiers="Control"
+                         Key="Subtract"
+                         Invoked="ZoomOutKey_Invoked" />
+  </Page.KeyboardAccelerators>
 
   <Grid>
     <Grid.RowDefinitions>
@@ -71,7 +88,7 @@
                 BorderBrush="{StaticResource AtlasBorderBrush}"
                 BorderThickness="1">
           <TextBlock x:Name="AppNamePill"
-                     Text="ROUNDSAPP.MOBILE"
+                     Text="{Binding Graph.App, Converter={StaticResource Upper}}"
                      Style="{StaticResource AtlasMonoCaption}"
                      Foreground="{StaticResource AtlasTextBrush}" />
         </Border>
@@ -100,6 +117,7 @@
                                   MaxZoomLevel="3.0"
                                   IsZoomAllowed="True"
                                   IsPanAllowed="True"
+                                  AutoFitToCanvas="True"
                                   HorizontalContentAlignment="Stretch"
                                   VerticalContentAlignment="Stretch">
             <mvux:FeedView Source="{Binding Graph}">
@@ -243,7 +261,7 @@
           </Grid.RowDefinitions>
 
           <utu:TabBar x:Name="PanelTabs"
-                      SelectedIndex="0"
+                      SelectedIndex="{Binding PanelTab, Mode=TwoWay}"
                       Style="{StaticResource TopTabBarStyle}">
             <utu:TabBarItem Content="AGENT"
                             AutomationProperties.Name="Agent panel" />

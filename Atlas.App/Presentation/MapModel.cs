@@ -16,8 +16,14 @@ public partial record MapModel(IAppModelSource ModelSource)
 
     public IState<QueryResult> AgentResult => State<QueryResult>.Empty(this);
 
-    public async ValueTask SelectNode(AppNode node, CancellationToken ct) =>
+    // 0 = Agent, 1 = Inspector. Selecting a node brings the inspector forward.
+    public IState<int> PanelTab => State.Value(this, () => 0);
+
+    public async ValueTask SelectNode(AppNode node, CancellationToken ct)
+    {
         await Selected.UpdateAsync(_ => node, ct);
+        await PanelTab.SetAsync(1, ct);
+    }
 
     public async ValueTask FindOrphans(CancellationToken ct) =>
         await RunQuery(GraphQueries.FindOrphans, ct);
