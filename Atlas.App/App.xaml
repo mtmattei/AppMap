@@ -1,7 +1,8 @@
 <Application x:Class="Atlas.App.App"
        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-       xmlns:utum="using:Uno.Toolkit.UI.Material">
+       xmlns:utum="using:Uno.Toolkit.UI.Material"
+       RequestedTheme="Dark">
 
   <Application.Resources>
     <ResourceDictionary>
@@ -19,9 +20,8 @@
             </ResourceDictionary>
           </utum:MaterialToolkitTheme.FontOverrideDictionary> -->
         </utum:MaterialToolkitTheme>
+        <ResourceDictionary Source="ms-appx:///Themes/Typography.xaml" />
       </ResourceDictionary.MergedDictionaries>
-
-      <!-- Add resources here -->
 
     </ResourceDictionary>
   </Application.Resources>
