@@ -15,6 +15,7 @@ public sealed partial class NodeCard : UserControl
     {
         this.InitializeComponent();
         DataContextChanged += (_, _) => UpdateVisualState();
+        ProtectedCursor = Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.Hand);
     }
 
     /// <summary>Id of the currently selected node; drives the selection ring.</summary>
@@ -45,7 +46,10 @@ public sealed partial class NodeCard : UserControl
 
         Opacity = highlightActive && !isHighlighted && !isSelected ? 0.25 : 1.0;
 
-        var key = isSelected || isHighlighted ? "AtlasLiveBrush" : "AtlasBorder2Brush";
+        // Hard amber ring for selection/highlight; soft amber outline marks the live node at rest.
+        var key = isSelected || isHighlighted
+            ? "AtlasLiveBrush"
+            : node?.Status == NodeStatus.Live ? "AtlasLiveDimBrush" : "AtlasBorder2Brush";
         if (Application.Current.Resources.TryGetValue(key, out var brush))
         {
             Card.BorderBrush = (Brush)brush;

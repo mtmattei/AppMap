@@ -28,6 +28,7 @@
   <SolidColorBrush x:Key="AtlasShellBrush" Color="{StaticResource AtlasShellColor}" />
   <SolidColorBrush x:Key="AtlasOrphanBrush" Color="{StaticResource AtlasOrphanColor}" />
   <SolidColorBrush x:Key="AtlasLiveBrush" Color="{StaticResource AtlasLiveColor}" />
+  <SolidColorBrush x:Key="AtlasLiveDimBrush" Color="{StaticResource AtlasLiveColor}" Opacity="0.45" />
   <SolidColorBrush x:Key="AtlasCanvasBrush" Color="{StaticResource AtlasCanvasColor}" />
   <SolidColorBrush x:Key="AtlasPanelBrush" Color="{StaticResource AtlasPanelColor}" />
   <SolidColorBrush x:Key="AtlasSurfaceBrush" Color="{StaticResource AtlasSurfaceColor}" />

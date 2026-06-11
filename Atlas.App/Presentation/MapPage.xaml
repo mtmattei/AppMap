@@ -214,6 +214,8 @@
               </CheckBox>
               <TextBlock Text="TOGGLE LAYERS"
                          Style="{StaticResource AtlasMonoCaption}" />
+              <TextBlock Text="CTRL+WHEEL ZOOM · MIDDLE-DRAG PAN"
+                         Style="{StaticResource AtlasMonoCaption}" />
             </utu:AutoLayout>
           </Border>
 
