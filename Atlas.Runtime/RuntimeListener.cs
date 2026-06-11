@@ -11,7 +11,7 @@ namespace Atlas.Runtime;
 /// </summary>
 public sealed class RuntimeListener : IDisposable
 {
-    public const int DefaultPort = 9743;
+    public const int DefaultPort = AtlasChannel.DefaultPort;
 
     private readonly int _port;
     private TcpListener? _listener;

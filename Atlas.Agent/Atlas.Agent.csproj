@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Atlas.Core\Atlas.Core.csproj" />
+    <!-- Compiles against the uniform (non-platform) surface; the host app's
+         platform asset provides the implementation at runtime. -->
+    <PackageReference Include="Uno.Extensions.Navigation.WinUI" />
+  </ItemGroup>
+
+</Project>
