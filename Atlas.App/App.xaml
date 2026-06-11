@@ -20,6 +20,7 @@
             </ResourceDictionary>
           </utum:MaterialToolkitTheme.FontOverrideDictionary> -->
         </utum:MaterialToolkitTheme>
+        <ResourceDictionary Source="ms-appx:///Themes/AtlasBrushes.xaml" />
         <ResourceDictionary Source="ms-appx:///Themes/Typography.xaml" />
       </ResourceDictionary.MergedDictionaries>
 

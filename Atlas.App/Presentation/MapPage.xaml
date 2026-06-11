@@ -8,7 +8,7 @@
       xmlns:utu="using:Uno.Toolkit.UI"
       xmlns:mvux="using:Uno.Extensions.Reactive.UI"
       NavigationCacheMode="Required"
-      Background="{ThemeResource AtlasCanvasBrush}">
+      Background="{StaticResource AtlasCanvasBrush}">
 
   <Grid>
     <Grid.RowDefinitions>
@@ -22,8 +22,8 @@
                     CounterAxisAlignment="Center"
                     Spacing="18"
                     Padding="18,10"
-                    Background="{ThemeResource AtlasPanelBrush}"
-                    BorderBrush="{ThemeResource AtlasBorderBrush}"
+                    Background="{StaticResource AtlasPanelBrush}"
+                    BorderBrush="{StaticResource AtlasBorderBrush}"
                     BorderThickness="0,0,0,1">
 
       <utu:AutoLayout Orientation="Horizontal"
@@ -41,10 +41,10 @@
             </Border.RenderTransform>
             <Border.Background>
               <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                <GradientStop Color="{ThemeResource AtlasUnreachableColor}" Offset="0" />
-                <GradientStop Color="{ThemeResource AtlasDeclaredColor}" Offset="0.33" />
-                <GradientStop Color="{ThemeResource AtlasObservedColor}" Offset="0.66" />
-                <GradientStop Color="{ThemeResource AtlasShellColor}" Offset="1" />
+                <GradientStop Color="{StaticResource AtlasUnreachableColor}" Offset="0" />
+                <GradientStop Color="{StaticResource AtlasDeclaredColor}" Offset="0.33" />
+                <GradientStop Color="{StaticResource AtlasObservedColor}" Offset="0.66" />
+                <GradientStop Color="{StaticResource AtlasShellColor}" Offset="1" />
               </LinearGradientBrush>
             </Border.Background>
           </Border>
@@ -61,16 +61,16 @@
                       CounterAxisAlignment="Center">
         <Border CornerRadius="999"
                 Padding="11,5"
-                BorderBrush="{ThemeResource AtlasBorderBrush}"
+                BorderBrush="{StaticResource AtlasBorderBrush}"
                 BorderThickness="1">
           <TextBlock x:Name="AppNamePill"
                      Text="ROUNDSAPP.MOBILE"
                      Style="{StaticResource AtlasMonoCaption}"
-                     Foreground="{ThemeResource AtlasTextBrush}" />
+                     Foreground="{StaticResource AtlasTextBrush}" />
         </Border>
         <Border CornerRadius="999"
                 Padding="11,5"
-                BorderBrush="{ThemeResource AtlasBorderBrush}"
+                BorderBrush="{StaticResource AtlasBorderBrush}"
                 BorderThickness="1">
           <TextBlock Text="STATIC · SAMPLE MODEL"
                      Style="{StaticResource AtlasMonoCaption}" />
@@ -85,7 +85,7 @@
     <utu:DrawerControl x:Name="PanelDrawer"
                        Grid.Row="1">
       <utu:DrawerControl.Content>
-        <Grid Background="{ThemeResource AtlasCanvasBrush}">
+        <Grid Background="{StaticResource AtlasCanvasBrush}">
           <utu:ZoomContentControl x:Name="MapZoom"
                                   MinZoomLevel="0.25"
                                   MaxZoomLevel="3.0"
@@ -98,7 +98,11 @@
                 <DataTemplate>
                   <Canvas Width="1700"
                           Height="660">
-                    <!-- EdgeLayer lands here in the next step -->
+                    <!-- StaticResource: ThemeResource does not apply to custom DPs inside templates -->
+                    <controls:EdgeLayer Source="{Binding Data}"
+                                        ObservedBrush="{StaticResource AtlasObservedBrush}"
+                                        DeclaredBrush="{StaticResource AtlasDeclaredBrush}"
+                                        UnreachableBrush="{StaticResource AtlasUnreachableBrush}" />
                     <ItemsRepeater ItemsSource="{Binding Data.Nodes}"
                                    utu:CommandExtensions.Command="{Binding DataContext.SelectNode, ElementName=Root}">
                       <ItemsRepeater.Layout>
@@ -118,8 +122,8 @@
         </Grid>
       </utu:DrawerControl.Content>
       <utu:DrawerControl.DrawerContent>
-        <Grid Background="{ThemeResource AtlasPanelBrush}"
-              BorderBrush="{ThemeResource AtlasBorderBrush}"
+        <Grid Background="{StaticResource AtlasPanelBrush}"
+              BorderBrush="{StaticResource AtlasBorderBrush}"
               BorderThickness="1,0,0,0">
           <utu:AutoLayout Orientation="Vertical"
                           Spacing="16"
@@ -128,7 +132,7 @@
                        Style="{StaticResource AtlasMonoCaption}" />
             <TextBlock Text="Select a node on the canvas to inspect its view, view-model, route, and the model the agent receives."
                        Style="{StaticResource AtlasSerifProse}"
-                       Foreground="{ThemeResource AtlasTextMutedBrush}" />
+                       Foreground="{StaticResource AtlasTextMutedBrush}" />
           </utu:AutoLayout>
         </Grid>
       </utu:DrawerControl.DrawerContent>

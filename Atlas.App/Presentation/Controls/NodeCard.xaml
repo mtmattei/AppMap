@@ -7,20 +7,19 @@
 
   <UserControl.Resources>
     <local:NodeKindToBrushConverter x:Key="KindToAccent"
-                                    Shell="{ThemeResource AtlasShellBrush}"
-                                    Page="{ThemeResource AtlasDeclaredBrush}"
-                                    Dialog="{ThemeResource AtlasLiveBrush}" />
+                                    Shell="{StaticResource AtlasShellBrush}"
+                                    Page="{StaticResource AtlasDeclaredBrush}"
+                                    Dialog="{StaticResource AtlasLiveBrush}" />
     <local:UpperConverter x:Key="Upper" />
     <local:StatusVisibleConverter x:Key="StatusVisible" />
   </UserControl.Resources>
 
-  <!-- Top padding leaves room for the live/orphan tags overlapping the card edge -->
+  <!-- Card top stays at the model position so edge anchors line up; tags overlap upward. -->
   <Grid>
-    <utu:CardContentControl Margin="0,9,0,0"
-                            MinHeight="78"
+    <utu:CardContentControl MinHeight="78"
                             Style="{StaticResource FilledCardContentControlStyle}"
-                            Background="{ThemeResource AtlasSurfaceBrush}"
-                            BorderBrush="{ThemeResource AtlasBorder2Brush}"
+                            Background="{StaticResource AtlasSurfaceBrush}"
+                            BorderBrush="{StaticResource AtlasBorder2Brush}"
                             BorderThickness="1"
                             CornerRadius="9"
                             HorizontalContentAlignment="Stretch"
@@ -58,10 +57,10 @@
 
     <Border HorizontalAlignment="Right"
             VerticalAlignment="Top"
-            Margin="0,0,10,0"
+            Margin="0,-9,10,0"
             CornerRadius="5"
             Padding="7,2"
-            Background="{ThemeResource AtlasLiveBrush}"
+            Background="{StaticResource AtlasLiveBrush}"
             Visibility="{Binding Status, Converter={StaticResource StatusVisible}, ConverterParameter=Live}">
       <TextBlock Text="LIVE"
                  Style="{StaticResource AtlasMonoCaption}"
@@ -70,10 +69,10 @@
 
     <Border HorizontalAlignment="Left"
             VerticalAlignment="Top"
-            Margin="10,0,0,0"
+            Margin="10,-9,0,0"
             CornerRadius="5"
             Padding="7,2"
-            Background="{ThemeResource AtlasOrphanBrush}"
+            Background="{StaticResource AtlasOrphanBrush}"
             Visibility="{Binding Status, Converter={StaticResource StatusVisible}, ConverterParameter=Orphan}">
       <TextBlock Text="ORPHAN"
                  Style="{StaticResource AtlasMonoCaption}"

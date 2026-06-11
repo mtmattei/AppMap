@@ -1,5 +1,5 @@
-<!-- Atlas palette: single dark theme, so Light and Dark dictionaries carry the same values.
-     Source of truth for every color in the app — no #AARRGGBB literals anywhere else. -->
+<!-- Material role overrides mapped to the Atlas palette. Single dark theme, so Light and
+     Dark carry the same values. Atlas semantic brushes live in Themes/AtlasBrushes.xaml. -->
 <ResourceDictionary xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
   <ResourceDictionary.ThemeDictionaries>
     <ResourceDictionary x:Key="Light">
@@ -31,39 +31,6 @@
       <Color x:Key="PrimaryInverseColor">#6B5526</Color>
       <Color x:Key="SurfaceTintColor">#FFCB6B</Color>
       <Color x:Key="OutlineVariantColor">#262D38</Color>
-
-      <!-- Atlas semantic palette -->
-      <Color x:Key="AtlasObservedColor">#7EE787</Color>
-      <Color x:Key="AtlasDeclaredColor">#79C0FF</Color>
-      <Color x:Key="AtlasUnreachableColor">#FF7B72</Color>
-      <Color x:Key="AtlasShellColor">#D2A8FF</Color>
-      <Color x:Key="AtlasOrphanColor">#FF7B72</Color>
-      <Color x:Key="AtlasLiveColor">#FFCB6B</Color>
-      <Color x:Key="AtlasCanvasColor">#0E1014</Color>
-      <Color x:Key="AtlasPanelColor">#14171D</Color>
-      <Color x:Key="AtlasSurfaceColor">#181C23</Color>
-      <Color x:Key="AtlasSurface2Color">#1E232C</Color>
-      <Color x:Key="AtlasBorderColor">#262D38</Color>
-      <Color x:Key="AtlasBorder2Color">#313A47</Color>
-      <Color x:Key="AtlasTextColor">#E6E9EF</Color>
-      <Color x:Key="AtlasTextMutedColor">#8B94A3</Color>
-      <Color x:Key="AtlasTextMuted2Color">#5D6571</Color>
-
-      <SolidColorBrush x:Key="AtlasObservedBrush" Color="{StaticResource AtlasObservedColor}" />
-      <SolidColorBrush x:Key="AtlasDeclaredBrush" Color="{StaticResource AtlasDeclaredColor}" />
-      <SolidColorBrush x:Key="AtlasUnreachableBrush" Color="{StaticResource AtlasUnreachableColor}" />
-      <SolidColorBrush x:Key="AtlasShellBrush" Color="{StaticResource AtlasShellColor}" />
-      <SolidColorBrush x:Key="AtlasOrphanBrush" Color="{StaticResource AtlasOrphanColor}" />
-      <SolidColorBrush x:Key="AtlasLiveBrush" Color="{StaticResource AtlasLiveColor}" />
-      <SolidColorBrush x:Key="AtlasCanvasBrush" Color="{StaticResource AtlasCanvasColor}" />
-      <SolidColorBrush x:Key="AtlasPanelBrush" Color="{StaticResource AtlasPanelColor}" />
-      <SolidColorBrush x:Key="AtlasSurfaceBrush" Color="{StaticResource AtlasSurfaceColor}" />
-      <SolidColorBrush x:Key="AtlasSurface2Brush" Color="{StaticResource AtlasSurface2Color}" />
-      <SolidColorBrush x:Key="AtlasBorderBrush" Color="{StaticResource AtlasBorderColor}" />
-      <SolidColorBrush x:Key="AtlasBorder2Brush" Color="{StaticResource AtlasBorder2Color}" />
-      <SolidColorBrush x:Key="AtlasTextBrush" Color="{StaticResource AtlasTextColor}" />
-      <SolidColorBrush x:Key="AtlasTextMutedBrush" Color="{StaticResource AtlasTextMutedColor}" />
-      <SolidColorBrush x:Key="AtlasTextMuted2Brush" Color="{StaticResource AtlasTextMuted2Color}" />
     </ResourceDictionary>
     <ResourceDictionary x:Key="Dark">
       <Color x:Key="PrimaryColor">#FFCB6B</Color>
@@ -94,39 +61,6 @@
       <Color x:Key="PrimaryInverseColor">#6B5526</Color>
       <Color x:Key="SurfaceTintColor">#FFCB6B</Color>
       <Color x:Key="OutlineVariantColor">#262D38</Color>
-
-      <!-- Atlas semantic palette -->
-      <Color x:Key="AtlasObservedColor">#7EE787</Color>
-      <Color x:Key="AtlasDeclaredColor">#79C0FF</Color>
-      <Color x:Key="AtlasUnreachableColor">#FF7B72</Color>
-      <Color x:Key="AtlasShellColor">#D2A8FF</Color>
-      <Color x:Key="AtlasOrphanColor">#FF7B72</Color>
-      <Color x:Key="AtlasLiveColor">#FFCB6B</Color>
-      <Color x:Key="AtlasCanvasColor">#0E1014</Color>
-      <Color x:Key="AtlasPanelColor">#14171D</Color>
-      <Color x:Key="AtlasSurfaceColor">#181C23</Color>
-      <Color x:Key="AtlasSurface2Color">#1E232C</Color>
-      <Color x:Key="AtlasBorderColor">#262D38</Color>
-      <Color x:Key="AtlasBorder2Color">#313A47</Color>
-      <Color x:Key="AtlasTextColor">#E6E9EF</Color>
-      <Color x:Key="AtlasTextMutedColor">#8B94A3</Color>
-      <Color x:Key="AtlasTextMuted2Color">#5D6571</Color>
-
-      <SolidColorBrush x:Key="AtlasObservedBrush" Color="{StaticResource AtlasObservedColor}" />
-      <SolidColorBrush x:Key="AtlasDeclaredBrush" Color="{StaticResource AtlasDeclaredColor}" />
-      <SolidColorBrush x:Key="AtlasUnreachableBrush" Color="{StaticResource AtlasUnreachableColor}" />
-      <SolidColorBrush x:Key="AtlasShellBrush" Color="{StaticResource AtlasShellColor}" />
-      <SolidColorBrush x:Key="AtlasOrphanBrush" Color="{StaticResource AtlasOrphanColor}" />
-      <SolidColorBrush x:Key="AtlasLiveBrush" Color="{StaticResource AtlasLiveColor}" />
-      <SolidColorBrush x:Key="AtlasCanvasBrush" Color="{StaticResource AtlasCanvasColor}" />
-      <SolidColorBrush x:Key="AtlasPanelBrush" Color="{StaticResource AtlasPanelColor}" />
-      <SolidColorBrush x:Key="AtlasSurfaceBrush" Color="{StaticResource AtlasSurfaceColor}" />
-      <SolidColorBrush x:Key="AtlasSurface2Brush" Color="{StaticResource AtlasSurface2Color}" />
-      <SolidColorBrush x:Key="AtlasBorderBrush" Color="{StaticResource AtlasBorderColor}" />
-      <SolidColorBrush x:Key="AtlasBorder2Brush" Color="{StaticResource AtlasBorder2Color}" />
-      <SolidColorBrush x:Key="AtlasTextBrush" Color="{StaticResource AtlasTextColor}" />
-      <SolidColorBrush x:Key="AtlasTextMutedBrush" Color="{StaticResource AtlasTextMutedColor}" />
-      <SolidColorBrush x:Key="AtlasTextMuted2Brush" Color="{StaticResource AtlasTextMuted2Color}" />
     </ResourceDictionary>
   </ResourceDictionary.ThemeDictionaries>
 </ResourceDictionary>
