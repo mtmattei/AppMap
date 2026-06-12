@@ -19,6 +19,7 @@ public sealed partial class MapPage : Page
     // resize) keeps the map shifted, so recenter explicitly.
     private void FitAndCenter()
     {
+        StopZoomAnimation();
         MapZoom.FitToCanvas();
         MapZoom.CenterContent();
     }
@@ -47,8 +48,59 @@ public sealed partial class MapPage : Page
         args.Handled = true;
     }
 
-    private void ZoomBy(double factor) =>
-        MapZoom.ZoomLevel = Math.Clamp(MapZoom.ZoomLevel * factor, MapZoom.MinZoomLevel, MapZoom.MaxZoomLevel);
+    // ----- animated zoom for the +/- buttons and Ctrl+± keys -----
+    // A storyboard holds the animated DP after completing, which would mask the direct
+    // ZoomLevel writes from Ctrl+wheel, FitToCanvas, and double-tap. So: write the target
+    // as the local value (silently updates the base under the hold), then Stop to release.
+
+    private Microsoft.UI.Xaml.Media.Animation.Storyboard? _zoomAnimation;
+
+    private void ZoomBy(double factor)
+    {
+        StopZoomAnimation();
+        var target = Math.Clamp(MapZoom.ZoomLevel * factor, MapZoom.MinZoomLevel, MapZoom.MaxZoomLevel);
+
+        var animation = new Microsoft.UI.Xaml.Media.Animation.DoubleAnimation
+        {
+            To = target,
+            Duration = new Duration(TimeSpan.FromMilliseconds(160)),
+            EnableDependentAnimation = true,
+            EasingFunction = new Microsoft.UI.Xaml.Media.Animation.CubicEase
+            {
+                EasingMode = Microsoft.UI.Xaml.Media.Animation.EasingMode.EaseOut,
+            },
+        };
+        Microsoft.UI.Xaml.Media.Animation.Storyboard.SetTarget(animation, MapZoom);
+        Microsoft.UI.Xaml.Media.Animation.Storyboard.SetTargetProperty(animation, "ZoomLevel");
+
+        var storyboard = new Microsoft.UI.Xaml.Media.Animation.Storyboard { Children = { animation } };
+        storyboard.Completed += (_, _) =>
+        {
+            if (ReferenceEquals(_zoomAnimation, storyboard))
+            {
+                MapZoom.ZoomLevel = target;
+                ReleaseZoomAnimation();
+            }
+        };
+        _zoomAnimation = storyboard;
+        storyboard.Begin();
+    }
+
+    private void StopZoomAnimation()
+    {
+        if (_zoomAnimation is not null)
+        {
+            // Freeze at the current animated value before releasing the hold.
+            MapZoom.ZoomLevel = MapZoom.ZoomLevel;
+            ReleaseZoomAnimation();
+        }
+    }
+
+    private void ReleaseZoomAnimation()
+    {
+        _zoomAnimation?.Stop();
+        _zoomAnimation = null;
+    }
 
     // Entrance fade for blocks that materialize from a feed (agent result, scoped context).
     private void Reveal_Loaded(object sender, RoutedEventArgs e)
@@ -186,6 +238,7 @@ public sealed partial class MapPage : Page
             return;
         }
 
+        StopZoomAnimation();
         var zoom = Math.Max(MapZoom.ZoomLevel, 1.0);
         MapZoom.ZoomLevel = zoom;
         MapZoom.HorizontalScrollValue = (position.X + 91) * zoom - MapZoom.ActualWidth / 2;

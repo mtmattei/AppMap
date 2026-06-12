@@ -274,7 +274,8 @@
                     AutomationProperties.Name="Fit map to view" />
           </utu:AutoLayout>
 
-          <!-- Transient notice: confirms Jump / Scope / Open model without stealing input -->
+          <!-- Transient notice: confirms Jump / Scope / Open model without stealing input.
+               Starts hidden; Reveal.When fades it with the bound value. -->
           <Border HorizontalAlignment="Center"
                   VerticalAlignment="Bottom"
                   Margin="0,0,0,20"
@@ -284,7 +285,9 @@
                   CornerRadius="999"
                   Padding="16,8"
                   IsHitTestVisible="False"
-                  Visibility="{Binding Notice, Converter={StaticResource StringVisible}}">
+                  Opacity="0"
+                  Visibility="Collapsed"
+                  local:Reveal.When="{Binding Notice}">
             <TextBlock Text="{Binding Notice}"
                        Style="{StaticResource AtlasMonoBody}" />
           </Border>
@@ -517,7 +520,8 @@
                 <!-- Scoped edit context (gated on the projected string being present) -->
                 <utu:AutoLayout Orientation="Vertical" Spacing="7" Padding="16,12,16,16"
                                 BorderBrush="{StaticResource AtlasBorderBrush}" BorderThickness="0,1,0,0"
-                                Visibility="{Binding ScopedContext, Converter={StaticResource StringVisible}}">
+                                Opacity="0" Visibility="Collapsed"
+                                local:Reveal.When="{Binding ScopedContext}">
                   <TextBlock Text="SCOPED EDIT CONTEXT" Style="{StaticResource AtlasMonoCaption}" />
                   <Border Background="{StaticResource AtlasSurfaceBrush}" BorderBrush="{StaticResource AtlasLiveDimBrush}" BorderThickness="1" CornerRadius="4" Padding="11">
                     <TextBlock x:Name="ScopedContextText" Text="{Binding ScopedContext}" Style="{StaticResource AtlasMonoMuted}" TextWrapping="Wrap" />
