@@ -169,6 +169,7 @@ public sealed partial class MapPage : Page
     private bool _panning;
     private Windows.Foundation.Point _panStart;
     private (double H, double V) _panOrigin;
+    private (double X, double Y) _panSign;
 
     private void CanvasHost_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
@@ -200,13 +201,15 @@ public sealed partial class MapPage : Page
             _panning = true;
             StopViewAnimation();
             CanvasHost.CapturePointer(e.Pointer);
-            _panOrigin = (MapZoom.HorizontalScrollValue - dx, MapZoom.VerticalScrollValue - dy);
+            // Content follows the pointer: Δtranslation = -d, so Δscroll = -d × K (see ScrollSign).
+            _panSign = ScrollSign();
+            _panOrigin = (MapZoom.HorizontalScrollValue + dx * _panSign.X, MapZoom.VerticalScrollValue + dy * _panSign.Y);
         }
 
         if (_panning)
         {
-            MapZoom.HorizontalScrollValue = _panOrigin.H + dx;
-            MapZoom.VerticalScrollValue = _panOrigin.V + dy;
+            MapZoom.HorizontalScrollValue = _panOrigin.H - dx * _panSign.X;
+            MapZoom.VerticalScrollValue = _panOrigin.V - dy * _panSign.Y;
             e.Handled = true;
         }
     }
@@ -255,47 +258,60 @@ public sealed partial class MapPage : Page
         return null;
     }
 
+    // ZoomContentControl renders its content at translation = ScrollValue × K, where K
+    // (Toolkit ComputeK) is +1 on any axis whose scaled content fits inside the viewport
+    // and -1 where it overflows. Every scroll write must carry that sign or pans reverse
+    // direction at fit-out zoom levels.
+    private (double X, double Y) ScrollSign()
+    {
+        var content = MapZoom.Content as FrameworkElement;
+        var zoom = MapZoom.ZoomLevel;
+        return (
+            MapZoom.ActualWidth - (content?.ActualWidth ?? 0) * zoom >= 0 ? 1 : -1,
+            MapZoom.ActualHeight - (content?.ActualHeight ?? 0) * zoom >= 0 ? 1 : -1);
+    }
+
     // ----- single tap focuses a node: pan it fully into view (minimal movement) -----
     // Selection opens the inspector; the pan keeps the selected card on screen so the
     // two stay visibly connected. Already-visible nodes don't move.
 
     private void NodeCard_Tapped(object sender, TappedRoutedEventArgs e)
     {
-        if ((sender as FrameworkElement)?.DataContext is not Atlas.Core.AppNode { Position: { } position })
+        if (sender is not FrameworkElement card
+            || card.DataContext is not Atlas.Core.AppNode { Position: not null })
         {
             return;
         }
 
         const double margin = 28;
-        const double nodeWidth = 182;
-        const double nodeHeight = 96; // card plus the badge overhang above it
 
-        var zoom = MapZoom.ZoomLevel;
-        var left = position.X * zoom - MapZoom.HorizontalScrollValue;
-        var top = (position.Y - 9) * zoom - MapZoom.VerticalScrollValue;
-        var right = left + nodeWidth * zoom;
-        var bottom = top + nodeHeight * zoom;
+        // True viewport rect (zoom + pan applied); the rect reaches 9px up for the badge overhang.
+        var bounds = card.TransformToVisual(MapZoom)
+            .TransformBounds(new Windows.Foundation.Rect(0, -9, card.ActualWidth, card.ActualHeight + 9));
 
-        var dx = left < margin ? left - margin
-            : right > MapZoom.ActualWidth - margin ? right - (MapZoom.ActualWidth - margin) : 0;
-        var dy = top < margin ? top - margin
-            : bottom > MapZoom.ActualHeight - margin ? bottom - (MapZoom.ActualHeight - margin) : 0;
+        var dx = bounds.Left < margin ? bounds.Left - margin
+            : bounds.Right > MapZoom.ActualWidth - margin ? bounds.Right - (MapZoom.ActualWidth - margin) : 0;
+        var dy = bounds.Top < margin ? bounds.Top - margin
+            : bounds.Bottom > MapZoom.ActualHeight - margin ? bounds.Bottom - (MapZoom.ActualHeight - margin) : 0;
 
         if (Math.Abs(dx) < 1 && Math.Abs(dy) < 1)
         {
             return;
         }
 
+        // Content must shift by (-dx, -dy) on screen; Δscroll = Δtranslation × K.
+        var k = ScrollSign();
         AnimateView(
-            ("HorizontalScrollValue", MapZoom.HorizontalScrollValue + dx),
-            ("VerticalScrollValue", MapZoom.VerticalScrollValue + dy));
+            ("HorizontalScrollValue", MapZoom.HorizontalScrollValue - dx * k.X),
+            ("VerticalScrollValue", MapZoom.VerticalScrollValue - dy * k.Y));
     }
 
     // ----- double-tap focuses a node: zoom to 1:1 and center it -----
 
     private void NodeCard_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {
-        if ((sender as FrameworkElement)?.DataContext is not Atlas.Core.AppNode { Position: { } position })
+        if (sender is not FrameworkElement card
+            || card.DataContext is not Atlas.Core.AppNode { Position: { } position })
         {
             return;
         }
@@ -303,8 +319,11 @@ public sealed partial class MapPage : Page
         StopViewAnimation();
         var zoom = Math.Max(MapZoom.ZoomLevel, 1.0);
         MapZoom.ZoomLevel = zoom;
-        MapZoom.HorizontalScrollValue = (position.X + 91) * zoom - MapZoom.ActualWidth / 2;
-        MapZoom.VerticalScrollValue = (position.Y + 39) * zoom - MapZoom.ActualHeight / 2;
+
+        // Required translation centers the card; scroll = translation × K at the new zoom.
+        var k = ScrollSign();
+        MapZoom.HorizontalScrollValue = (MapZoom.ActualWidth / 2 - (position.X + card.ActualWidth / 2) * zoom) * k.X;
+        MapZoom.VerticalScrollValue = (MapZoom.ActualHeight / 2 - (position.Y + card.ActualHeight / 2) * zoom) * k.Y;
         e.Handled = true;
     }
 }
