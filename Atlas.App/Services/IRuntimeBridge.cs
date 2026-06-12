@@ -15,4 +15,10 @@ public interface IRuntimeBridge
 
     /// <summary>Replaces the current model (e.g. a model file opened by the user).</summary>
     void OpenModel(AppModel model);
+
+    /// <summary>True while an agent is connected and can receive jump commands.</summary>
+    bool IsConnected { get; }
+
+    /// <summary>Asks the connected agent to navigate to a route (best effort).</summary>
+    void RequestNavigate(string route);
 }

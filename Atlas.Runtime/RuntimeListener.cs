@@ -22,11 +22,32 @@ public sealed class RuntimeListener : IDisposable
         _port = port;
     }
 
+    private StreamWriter? _writer;
+
     public Exception? LastError { get; private set; }
 
     public event EventHandler<AgentMessage>? MessageReceived;
 
     public event EventHandler<bool>? ConnectionChanged;
+
+    /// <summary>Sends a command to the connected agent; no-op if none is connected.</summary>
+    public void Send(AgentCommand command)
+    {
+        var writer = _writer;
+        if (writer is null)
+        {
+            return;
+        }
+
+        try
+        {
+            writer.WriteLine(JsonSerializer.Serialize(command, AppModelJson.Compact));
+        }
+        catch (IOException)
+        {
+            // agent disconnected mid-send — the read loop will clean up
+        }
+    }
 
     public void Start()
     {
@@ -69,8 +90,11 @@ public sealed class RuntimeListener : IDisposable
         try
         {
             using (client)
-            using (var reader = new StreamReader(client.GetStream()))
+            using (var stream = client.GetStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream) { AutoFlush = true })
             {
+                _writer = writer;
                 while (!ct.IsCancellationRequested)
                 {
                     var line = await reader.ReadLineAsync().ConfigureAwait(false);
@@ -106,6 +130,7 @@ public sealed class RuntimeListener : IDisposable
         }
         finally
         {
+            _writer = null;
             ConnectionChanged?.Invoke(this, false);
         }
     }

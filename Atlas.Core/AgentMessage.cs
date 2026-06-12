@@ -14,3 +14,14 @@ public sealed record AgentMessage(
     string App,
     string? Route,
     DateTimeOffset Timestamp);
+
+/// <summary>
+/// A command from the viewer back to a connected agent (one NDJSON line each way).
+/// v1 carries navigation requests for "Jump to (live)".
+/// </summary>
+public sealed record AgentCommand(
+    string Kind,
+    string Route)
+{
+    public const string Navigate = "navigate";
+}

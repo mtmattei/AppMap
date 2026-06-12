@@ -489,6 +489,19 @@
                                      TextWrapping="Wrap" />
                         </Border>
                       </utu:AutoLayout>
+
+                      <!-- Act from canvas -->
+                      <utu:AutoLayout Orientation="Horizontal"
+                                      Spacing="8">
+                        <Button Content="Jump to (live)"
+                                Style="{StaticResource OutlinedButtonStyle}"
+                                Command="{Binding Parent.JumpTo}"
+                                AutomationProperties.Name="Jump to this screen in the running app" />
+                        <Button Content="Scope edit"
+                                Style="{StaticResource FilledButtonStyle}"
+                                Command="{Binding Parent.ScopeEdit}"
+                                AutomationProperties.Name="Scope an agent edit for this screen" />
+                      </utu:AutoLayout>
                     </utu:AutoLayout>
                   </DataTemplate>
                 </mvux:FeedView.ValueTemplate>
@@ -497,6 +510,37 @@
                     <TextBlock Text="Select a node on the canvas to inspect its view, view-model, route, and the model the agent receives."
                                Style="{StaticResource AtlasSerifProse}"
                                Foreground="{StaticResource AtlasTextMutedBrush}" />
+                  </DataTemplate>
+                </mvux:FeedView.NoneTemplate>
+              </mvux:FeedView>
+
+              <!-- Scoped edit context, ready to hand to the agent -->
+              <mvux:FeedView Source="{Binding ScopedContext}">
+                <mvux:FeedView.ValueTemplate>
+                  <DataTemplate>
+                    <utu:AutoLayout Orientation="Vertical"
+                                    Spacing="7">
+                      <TextBlock Text="SCOPED EDIT CONTEXT"
+                                 Style="{StaticResource AtlasMonoCaption}" />
+                      <Border Background="{StaticResource AtlasSurfaceBrush}"
+                              BorderBrush="{StaticResource AtlasLiveDimBrush}"
+                              BorderThickness="1"
+                              CornerRadius="8"
+                              Padding="12">
+                        <TextBlock Text="{Binding Data}"
+                                   Style="{StaticResource AtlasMonoMuted}"
+                                   TextWrapping="Wrap" />
+                      </Border>
+                      <Button Content="Clear context"
+                              Style="{StaticResource TextButtonStyle}"
+                              Command="{Binding Parent.ClearScope}"
+                              AutomationProperties.Name="Clear scoped edit context" />
+                    </utu:AutoLayout>
+                  </DataTemplate>
+                </mvux:FeedView.ValueTemplate>
+                <mvux:FeedView.NoneTemplate>
+                  <DataTemplate>
+                    <Grid />
                   </DataTemplate>
                 </mvux:FeedView.NoneTemplate>
               </mvux:FeedView>

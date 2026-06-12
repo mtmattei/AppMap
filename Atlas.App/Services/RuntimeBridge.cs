@@ -205,5 +205,18 @@ public sealed class RuntimeBridge(IAppModelSource modelSource, ILayoutStore layo
         }
     }
 
+    public bool IsConnected
+    {
+        get { lock (_gate) { return _connected; } }
+    }
+
+    public void RequestNavigate(string route)
+    {
+        lock (_gate)
+        {
+            _listener?.Send(new AgentCommand(AgentCommand.Navigate, route));
+        }
+    }
+
     public void Dispose() => _listener?.Dispose();
 }

@@ -22,7 +22,7 @@ public static class AtlasAgent
             ?? throw new InvalidOperationException(
                 "IRouteNotifier is not registered — the host app must use Uno.Extensions Navigation (.UseNavigation()).");
 
-        var connection = new AgentConnection(appName, port);
+        var connection = new AgentConnection(appName, port, services);
         notifier.RouteChanged += connection.OnRouteChanged;
         connection.Attach(() => notifier.RouteChanged -= connection.OnRouteChanged);
         return connection;
@@ -32,15 +32,18 @@ public static class AtlasAgent
     {
         private readonly string _appName;
         private readonly int _port;
+        private readonly IServiceProvider _services;
         private readonly ConcurrentQueue<AgentMessage> _outbox = new();
         private readonly SemaphoreSlim _signal = new(0);
         private readonly CancellationTokenSource _cts = new();
+        private INavigator? _lastNavigator;
         private Action? _detach;
 
-        public AgentConnection(string appName, int port)
+        public AgentConnection(string appName, int port, IServiceProvider services)
         {
             _appName = appName;
             _port = port;
+            _services = services;
             _ = SendLoopAsync(_cts.Token);
         }
 
@@ -48,6 +51,11 @@ public static class AtlasAgent
 
         public void OnRouteChanged(object? sender, RouteChangedEventArgs e)
         {
+            if (e.Navigator is not null)
+            {
+                _lastNavigator = e.Navigator;
+            }
+
             var route = e.Navigator?.Route?.ToString();
             if (string.IsNullOrWhiteSpace(route))
             {
@@ -66,9 +74,12 @@ public static class AtlasAgent
                 {
                     using var client = new TcpClient();
                     await client.ConnectAsync("127.0.0.1", _port, ct).ConfigureAwait(false);
-                    using var writer = new StreamWriter(client.GetStream(), new UTF8Encoding(false)) { AutoFlush = true };
+                    var stream = client.GetStream();
+                    using var writer = new StreamWriter(stream, new UTF8Encoding(false)) { AutoFlush = true };
+                    using var reader = new StreamReader(stream, new UTF8Encoding(false));
 
                     await SendAsync(writer, new AgentMessage(_appName, null, DateTimeOffset.Now)).ConfigureAwait(false);
+                    _ = ReceiveLoopAsync(reader, ct);
 
                     while (!ct.IsCancellationRequested)
                     {
@@ -100,6 +111,40 @@ public static class AtlasAgent
 
         private static Task SendAsync(StreamWriter writer, AgentMessage message) =>
             writer.WriteLineAsync(JsonSerializer.Serialize(message, AppModelJson.Compact));
+
+        private async Task ReceiveLoopAsync(StreamReader reader, CancellationToken ct)
+        {
+            try
+            {
+                while (!ct.IsCancellationRequested)
+                {
+                    var line = await reader.ReadLineAsync().ConfigureAwait(false);
+                    if (line is null)
+                    {
+                        return;
+                    }
+
+                    AgentCommand? command;
+                    try
+                    {
+                        command = JsonSerializer.Deserialize<AgentCommand>(line, AppModelJson.Compact);
+                    }
+                    catch (JsonException)
+                    {
+                        continue;
+                    }
+
+                    if (command is { Kind: AgentCommand.Navigate } && _lastNavigator is { } navigator)
+                    {
+                        await navigator.NavigateRouteAsync(this, command.Route).ConfigureAwait(false);
+                    }
+                }
+            }
+            catch (IOException)
+            {
+                // connection dropped — SendLoop's retry will re-establish
+            }
+        }
 
         public void Dispose()
         {

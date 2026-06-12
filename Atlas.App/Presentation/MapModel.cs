@@ -37,6 +37,29 @@ public partial record MapModel(IRuntimeBridge Bridge, IModelFilePicker Picker, I
         return default;
     }
 
+    public IState<string> ScopedContext => State<string>.Empty(this);
+
+    public async ValueTask JumpTo(CancellationToken ct)
+    {
+        if (await Selected is { } node)
+        {
+            Bridge.RequestNavigate(node.Route);
+        }
+    }
+
+    public async ValueTask ScopeEdit(CancellationToken ct)
+    {
+        var node = await Selected;
+        var model = await Graph;
+        if (node is not null && model is not null)
+        {
+            await ScopedContext.SetAsync(EditScope.For(model, node.Id).ToPromptContext(), ct);
+        }
+    }
+
+    public async ValueTask ClearScope(CancellationToken ct) =>
+        await ScopedContext.SetAsync(null!, ct);
+
     public async ValueTask OpenModel(CancellationToken ct)
     {
         var json = await Picker.PickModelJsonAsync(ct);
