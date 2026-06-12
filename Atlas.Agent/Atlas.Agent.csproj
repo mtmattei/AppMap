@@ -5,7 +5,22 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- NuGet packaging -->
+    <PackageId>Atlas.Agent</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>Atlas</Authors>
+    <Description>Publishes an Uno.Extensions Navigation app's route changes to a running Atlas viewer over loopback. Reference in Debug builds and call AtlasAgent.Start(Host.Services, "MyApp").</Description>
+    <PackageTags>uno-platform;navigation;diagnostics;atlas</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Atlas.Core\Atlas.Core.csproj" />

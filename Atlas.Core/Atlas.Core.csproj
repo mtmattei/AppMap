@@ -4,6 +4,12 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
+
+    <PackageId>Atlas.Core</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>Atlas</Authors>
+    <Description>The Atlas app-model contract: immutable AppModel records, JSON (de)serialization, and structural graph queries.</Description>
+    <PackageTags>uno-platform;atlas;app-model</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
