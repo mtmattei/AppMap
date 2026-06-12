@@ -13,7 +13,15 @@ public sealed partial class MapPage : Page
 
     private void ZoomOut_Click(object sender, RoutedEventArgs e) => ZoomBy(1 / 1.2);
 
-    private void ZoomFit_Click(object sender, RoutedEventArgs e) => MapZoom.FitToCanvas();
+    private void ZoomFit_Click(object sender, RoutedEventArgs e) => FitAndCenter();
+
+    // FitToCanvas only sets the zoom level; a leftover pan offset (e.g. after a window
+    // resize) keeps the map shifted, so recenter explicitly.
+    private void FitAndCenter()
+    {
+        MapZoom.FitToCanvas();
+        MapZoom.CenterContent();
+    }
 
     private void ResetView_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
@@ -23,7 +31,7 @@ public sealed partial class MapPage : Page
 
     private void FitView_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
-        MapZoom.FitToCanvas();
+        FitAndCenter();
         args.Handled = true;
     }
 
