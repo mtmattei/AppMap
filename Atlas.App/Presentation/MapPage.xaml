@@ -167,6 +167,7 @@
                                              HighlightedIds="{Binding DataContext.AgentResult.NodeIds, ElementName=Root, Mode=OneWay}"
                                              MoveCommand="{Binding DataContext.MoveNode, ElementName=Root, Mode=OneWay}"
                                              DragDelta="NodeCard_DragDelta"
+                                             Tapped="NodeCard_Tapped"
                                              DoubleTapped="NodeCard_DoubleTapped" />
                         </DataTemplate>
                       </ItemsRepeater.ItemTemplate>
