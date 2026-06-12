@@ -16,6 +16,7 @@
     <local:StatusVisibleConverter x:Key="StatusVisible" />
     <local:NodeJsonConverter x:Key="NodeJson" />
     <local:IndexVisibleConverter x:Key="IndexVisible" />
+    <local:StringVisibleConverter x:Key="StringVisible" />
     <local:BoolToBrushConverter x:Key="ConnectedDot"
                                 TrueBrush="{StaticResource AtlasObservedBrush}"
                                 FalseBrush="{StaticResource AtlasTextMuted2Brush}" />
@@ -514,36 +515,29 @@
                 </mvux:FeedView.NoneTemplate>
               </mvux:FeedView>
 
-              <!-- Scoped edit context, ready to hand to the agent -->
-              <mvux:FeedView Source="{Binding ScopedContext}">
-                <mvux:FeedView.ValueTemplate>
-                  <DataTemplate>
-                    <utu:AutoLayout Orientation="Vertical"
-                                    Spacing="7">
-                      <TextBlock Text="SCOPED EDIT CONTEXT"
-                                 Style="{StaticResource AtlasMonoCaption}" />
-                      <Border Background="{StaticResource AtlasSurfaceBrush}"
-                              BorderBrush="{StaticResource AtlasLiveDimBrush}"
-                              BorderThickness="1"
-                              CornerRadius="8"
-                              Padding="12">
-                        <TextBlock Text="{Binding Data}"
-                                   Style="{StaticResource AtlasMonoMuted}"
-                                   TextWrapping="Wrap" />
-                      </Border>
-                      <Button Content="Clear context"
-                              Style="{StaticResource TextButtonStyle}"
-                              Command="{Binding Parent.ClearScope}"
-                              AutomationProperties.Name="Clear scoped edit context" />
-                    </utu:AutoLayout>
-                  </DataTemplate>
-                </mvux:FeedView.ValueTemplate>
-                <mvux:FeedView.NoneTemplate>
-                  <DataTemplate>
-                    <Grid />
-                  </DataTemplate>
-                </mvux:FeedView.NoneTemplate>
-              </mvux:FeedView>
+              <!-- Scoped edit context, ready to hand to the agent.
+                   ScopedContext is IState<string>; the bindable VM projects it to a plain
+                   string, so bind a TextBlock directly (FeedView.Source needs a feed, not
+                   a string) and gate visibility on the text being present. -->
+              <utu:AutoLayout Orientation="Vertical"
+                              Spacing="7"
+                              Visibility="{Binding ScopedContext, Converter={StaticResource StringVisible}}">
+                <TextBlock Text="SCOPED EDIT CONTEXT"
+                           Style="{StaticResource AtlasMonoCaption}" />
+                <Border Background="{StaticResource AtlasSurfaceBrush}"
+                        BorderBrush="{StaticResource AtlasLiveDimBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="12">
+                  <TextBlock Text="{Binding ScopedContext}"
+                             Style="{StaticResource AtlasMonoMuted}"
+                             TextWrapping="Wrap" />
+                </Border>
+                <Button Content="Clear context"
+                        Style="{StaticResource TextButtonStyle}"
+                        Command="{Binding ClearScope}"
+                        AutomationProperties.Name="Clear scoped edit context" />
+              </utu:AutoLayout>
             </utu:AutoLayout>
           </ScrollViewer>
       </Grid>
