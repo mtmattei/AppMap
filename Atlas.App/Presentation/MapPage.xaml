@@ -145,6 +145,13 @@
                 <DataTemplate>
                   <Canvas Width="1700"
                           Height="660">
+                    <!-- Content-space dot lattice: pans/scales with the graph for depth -->
+                    <controls:DotGrid Width="1700"
+                                      Height="660"
+                                      Spacing="32"
+                                      DotRadius="1.2"
+                                      Opacity="0.55"
+                                      Fill="{StaticResource AtlasBorder2Brush}" />
                     <!-- StaticResource: ThemeResource does not apply to custom DPs inside templates -->
                     <controls:EdgeLayer Source="{Binding Data}"
                                         ObservedBrush="{StaticResource AtlasObservedBrush}"
