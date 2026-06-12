@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Atlas Side Rail — Three Directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chivo+Mono:wght@300;400;500;600;700&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;1,7..72,400&family=Special+Elite&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Michroma&family=Inconsolata:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    /* Atlas semantic palette (fixed across all directions) */
+    --amber:#FFCB6B; --sage:#7EE787; --blue:#79C0FF; --coral:#FF7B72; --purple:#D2A8FF;
+    --canvas:#0E1014;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{ -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+  body{
+    background:
+      radial-gradient(120% 90% at 18% 8%, #14181f 0%, var(--canvas) 60%),
+      var(--canvas);
+    min-height:100vh; color:#e6e9ef;
+    font-family:"Chivo Mono",ui-monospace,monospace;
+    padding:48px clamp(20px,4vw,72px) 96px;
+  }
+
+  /* faint graph hint behind everything */
+  body::before{
+    content:""; position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.5;
+    background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,.045) 1px, transparent 0);
+    background-size:30px 30px;
+  }
+
+  .page-head{ position:relative; z-index:1; max-width:1320px; margin:0 auto 40px; }
+  .page-head .kicker{
+    font-family:"Chivo Mono",monospace; font-size:11px; letter-spacing:.34em; text-transform:uppercase;
+    color:var(--amber);
+  }
+  .page-head h1{
+    font-family:"Literata",Georgia,serif; font-weight:500; font-size:clamp(26px,3.4vw,42px);
+    line-height:1.05; margin:10px 0 12px; letter-spacing:-.01em; max-width:20ch;
+  }
+  .page-head p{ font-family:"Literata",serif; color:#9aa3b2; font-size:15px; line-height:1.6; max-width:64ch; }
+  .page-head em{ color:#e6e9ef; font-style:italic; }
+
+  .rails{
+    position:relative; z-index:1;
+    display:flex; gap:clamp(24px,4vw,64px); flex-wrap:wrap; justify-content:center;
+    max-width:1320px; margin:0 auto;
+  }
+  .col{ width:372px; flex:0 0 372px; }
+  .col > .cap{ margin-bottom:14px; }
+  .cap .tag{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:"Chivo Mono",monospace; font-size:10.5px; letter-spacing:.22em; text-transform:uppercase;
+    color:#8b94a3;
+  }
+  .cap .tag b{ color:#e6e9ef; font-weight:600; letter-spacing:.14em; }
+  .cap .desc{ font-family:"Literata",serif; font-size:12.5px; line-height:1.55; color:#79828f; margin-top:6px; }
+  .cap .desc i{ color:#aeb6c2; font-style:italic; }
+
+  /* the rail itself is a fixed 372 column, ~720 tall, scrolls internally */
+  .rail{
+    width:372px; height:724px; overflow:hidden auto; position:relative;
+    border-radius:4px;
+  }
+  .rail::-webkit-scrollbar{ width:9px }
+  .rail::-webkit-scrollbar-thumb{ border-radius:4px }
+
+  /* =========================================================================
+     DIRECTION A — LAB INSTRUMENT READOUT
+     phosphor-dark · Chivo Mono / Literata · oscilloscope trace + scanline
+     ========================================================================= */
+  .A{
+    background:linear-gradient(180deg,#0c0f0d 0%, #0a0d0c 100%);
+    border:1px solid #1c2620;
+    font-family:"Chivo Mono",monospace;
+  }
+  .A::-webkit-scrollbar-thumb{ background:#22302a }
+  .A .scan{ position:absolute; left:0; right:0; height:64px; z-index:5; pointer-events:none;
+    background:linear-gradient(180deg, transparent, rgba(126,231,135,.05) 60%, transparent);
+    animation:A-scan 5.5s linear infinite; }
+  @keyframes A-scan{ 0%{ transform:translateY(-80px) } 100%{ transform:translateY(760px) } }
+
+  .A .chrome{ display:flex; align-items:center; justify-content:space-between;
+    padding:14px 16px 12px; border-bottom:1px solid #16201a; }
+  .A .chrome .ch-l{ font-size:10px; letter-spacing:.24em; text-transform:uppercase; color:#5d6b62 }
+  .A .chrome .ch-r{ font-size:9.5px; letter-spacing:.18em; color:var(--amber); display:flex; align-items:center; gap:6px }
+  .A .chrome .ch-r .led{ width:6px; height:6px; border-radius:50%; background:var(--amber);
+    box-shadow:0 0 8px 1px var(--amber); animation:A-blink 1.6s steps(1) infinite }
+  @keyframes A-blink{ 50%{ opacity:.35 } }
+
+  .A .tabs{ display:flex; gap:0; padding:0 16px; border-bottom:1px solid #16201a }
+  .A .tabs button{ background:none; border:none; cursor:pointer; font-family:inherit;
+    font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:#4f5c54;
+    padding:11px 2px; margin-right:20px; border-bottom:2px solid transparent; position:relative; top:1px }
+  .A .tabs button.on{ color:var(--sage); border-bottom-color:var(--sage) }
+
+  /* the scope */
+  .A .scope{ margin:16px; border:1px solid #1c2a23; border-radius:3px; background:
+    repeating-linear-gradient(0deg, transparent 0 17px, rgba(126,231,135,.04) 17px 18px),
+    repeating-linear-gradient(90deg, transparent 0 17px, rgba(126,231,135,.04) 17px 18px),
+    #07100b;
+    position:relative; overflow:hidden; }
+  .A .scope .label{ position:absolute; top:7px; left:9px; font-size:8.5px; letter-spacing:.18em;
+    color:#3f5247; text-transform:uppercase; z-index:2 }
+  .A .scope .ch{ position:absolute; top:7px; right:9px; font-size:8.5px; letter-spacing:.1em; color:var(--sage); z-index:2 }
+  .A .scope svg{ display:block; width:100%; height:118px }
+  .A .scope .trace{ fill:none; stroke:var(--sage); stroke-width:1.6;
+    filter:drop-shadow(0 0 3px rgba(126,231,135,.6));
+    stroke-dasharray:560; stroke-dashoffset:560; animation:A-draw 2.2s .2s ease-out forwards }
+  .A .scope .trace.dim{ stroke:var(--blue); stroke-dasharray:4 4; opacity:.5; filter:none; animation-delay:.5s }
+  @keyframes A-draw{ to{ stroke-dashoffset:0 } }
+  .A .scope .sweep{ position:absolute; top:0; bottom:0; width:1px; background:rgba(126,231,135,.5);
+    box-shadow:0 0 8px 1px rgba(126,231,135,.5); animation:A-sweep 3.2s linear infinite }
+  @keyframes A-sweep{ 0%{ left:-2% } 100%{ left:102% } }
+
+  .A .head{ padding:4px 16px 14px; }
+  .A .head .name{ font-size:19px; font-weight:500; letter-spacing:.01em; color:#dff7e6 }
+  .A .head .sub{ display:flex; align-items:center; gap:8px; margin-top:5px }
+  .A .head .kind{ font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:#4f5c54 }
+  .A .head .stat{ font-size:8.5px; letter-spacing:.14em; text-transform:uppercase;
+    color:#160f02; background:var(--amber); padding:2px 7px; border-radius:2px; font-weight:700 }
+
+  /* channels: field as instrument channel */
+  .A .chan{ padding:10px 16px; border-top:1px solid #11190f;
+    display:grid; grid-template-columns:64px 1fr; gap:12px; align-items:baseline }
+  .A .chan .k{ font-size:8.5px; letter-spacing:.16em; text-transform:uppercase; color:#46554c;
+    display:flex; align-items:baseline; gap:5px }
+  .A .chan .k::before{ content:""; width:5px; height:5px; border:1px solid #2a3a31; display:inline-block }
+  .A .chan .v{ font-size:12.5px; color:#cfe9d8; word-break:break-word }
+  .A .chan .v.route{ color:var(--sage) } .A .chan .v.vm{ color:var(--blue) }
+  .A .chan .list{ display:flex; flex-direction:column; gap:3px }
+  .A .chan .list span{ font-size:11px; color:#7f8f85 }
+  .A .ticks{ display:flex; gap:5px; flex-wrap:wrap; margin-top:4px }
+  .A .ticks span{ font-size:8.5px; letter-spacing:.04em; color:var(--purple);
+    border:1px solid #2a2440; padding:1px 6px; border-radius:2px }
+
+  .A .json{ margin:8px 16px 16px; padding:11px; background:#06100a; border:1px solid #16241b;
+    border-left:2px solid var(--sage); font-size:10px; line-height:1.7; white-space:pre; overflow-x:auto; color:#5e7268 }
+  .A .json .jk{ color:var(--coral) } .A .json .js{ color:var(--sage) } .A .json .jn{ color:var(--amber) }
+
+  .A .acts{ display:flex; gap:8px; padding:0 16px 18px }
+  .A .acts button{ flex:1; font-family:inherit; font-size:10px; letter-spacing:.1em; text-transform:uppercase;
+    padding:10px; border-radius:2px; cursor:pointer; transition:.15s }
+  .A .acts .ghost{ background:transparent; border:1px solid #29382f; color:#9fb4a8 }
+  .A .acts .ghost:hover{ border-color:var(--sage); color:var(--sage) }
+  .A .acts .solid{ background:var(--amber); border:1px solid var(--amber); color:#160f02; font-weight:700 }
+
+  /* =========================================================================
+     DIRECTION B — REDACTED DOSSIER  (inverted: light manila rail)
+     manila-light · Special Elite / Lora · redaction-wipe + punched file-tab
+     ========================================================================= */
+  .B{
+    background:
+      linear-gradient(180deg,#efe7d4 0%, #e7dcc4 100%);
+    border:1px solid #ccbf9f; color:#2b2417;
+    font-family:"Lora",Georgia,serif;
+    box-shadow:inset 0 0 60px rgba(120,96,40,.12);
+  }
+  .B::-webkit-scrollbar-thumb{ background:#c2b491 }
+  .B .filetab{ position:absolute; top:120px; left:-1px; writing-mode:vertical-rl;
+    background:#2b2417; color:#efe7d4; font-family:"Special Elite",monospace; font-size:10px;
+    letter-spacing:.22em; padding:14px 6px; border-radius:0 3px 3px 0; z-index:6 }
+  .B .filetab::before{ content:""; position:absolute; left:5px; top:7px; width:6px; height:6px;
+    border-radius:50%; background:#efe7d4; box-shadow:0 0 0 1.5px #2b2417 inset }
+
+  .B .mast{ padding:16px 18px 12px 26px; border-bottom:2px solid #2b2417;
+    background:repeating-linear-gradient(45deg,#2b2417 0 8px, transparent 8px 16px) bottom/100% 3px no-repeat; }
+  .B .mast .org{ font-family:"Special Elite",monospace; font-size:10px; letter-spacing:.28em; text-transform:uppercase; color:#6b5d3e }
+  .B .mast .title{ font-family:"Special Elite",monospace; font-size:14px; letter-spacing:.06em; margin-top:3px; color:#2b2417 }
+  .B .mast .nums{ font-family:"Special Elite",monospace; font-size:9px; letter-spacing:.1em; color:#8a7a54; margin-top:5px }
+
+  .B .tabs{ display:flex; padding:0 18px 0 26px; border-bottom:1px solid #cbbd99 }
+  .B .tabs button{ background:none; border:none; cursor:pointer; font-family:"Special Elite",monospace;
+    font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:#9a8a62; padding:10px 0;
+    margin-right:20px; border-bottom:2px solid transparent }
+  .B .tabs button.on{ color:#2b2417; border-bottom-color:var(--coral) }
+
+  .B .subj{ padding:16px 18px 8px 26px }
+  .B .subj .name{ font-family:"Special Elite",monospace; font-size:18px; letter-spacing:.02em }
+  .B .subj .stamp{ display:inline-block; margin-top:8px; font-family:"Special Elite",monospace;
+    font-size:11px; letter-spacing:.18em; color:var(--coral); border:2px solid var(--coral);
+    padding:3px 10px; border-radius:3px; transform:rotate(-4deg);
+    box-shadow:0 0 0 1px rgba(255,123,114,.25) }
+  .B .subj .kind{ font-family:"Special Elite",monospace; font-size:9px; letter-spacing:.2em;
+    text-transform:uppercase; color:#8a7a54; margin-left:10px }
+
+  .B .rec{ padding:9px 18px 9px 26px; border-top:1px solid #d8cba8; display:flex; gap:14px; align-items:baseline }
+  .B .rec .k{ font-family:"Special Elite",monospace; font-size:8.5px; letter-spacing:.14em; text-transform:uppercase;
+    color:#9a8a62; width:74px; flex:0 0 74px; padding-top:2px }
+  .B .rec .v{ font-size:13.5px; line-height:1.5; }
+  .B .rec .v.mono{ font-family:"Special Elite",monospace; font-size:11px; letter-spacing:.02em }
+  .B .rec .v.route{ color:#7a5a18 } .B .rec .v.vm{ color:#365a86 }
+  .B .rec .v .ln{ display:block }
+  .B .chips{ display:flex; gap:6px; flex-wrap:wrap }
+  .B .chips span{ font-family:"Special Elite",monospace; font-size:9px; letter-spacing:.06em;
+    border:1px solid #b9a877; padding:2px 7px; color:#6f5f3c; background:#e3d7bb }
+
+  /* redaction wipe */
+  .B .redact{ position:relative; padding:9px 18px 9px 26px; border-top:1px solid #d8cba8 }
+  .B .redact .k{ font-family:"Special Elite",monospace; font-size:8.5px; letter-spacing:.14em;
+    text-transform:uppercase; color:#9a8a62; margin-bottom:6px }
+  .B .redact .body{ font-family:"Special Elite",monospace; font-size:10px; line-height:1.7; color:#3a3120; white-space:pre; overflow-x:auto }
+  .B .redact .bar{ position:absolute; background:#1c1810; height:13px; border-radius:1px;
+    transition:width .45s cubic-bezier(.2,.7,.2,1); cursor:pointer }
+  .B .redact:hover .bar{ width:0 !important }
+  .B .redact .hint{ font-size:10px; font-style:italic; color:#9a8a62; margin-top:7px }
+
+  .B .acts{ display:flex; gap:8px; padding:14px 18px 18px 26px }
+  .B .acts button{ flex:1; font-family:"Special Elite",monospace; font-size:10px; letter-spacing:.1em;
+    text-transform:uppercase; padding:9px; border-radius:2px; cursor:pointer }
+  .B .acts .ghost{ background:transparent; border:1px solid #2b2417; color:#2b2417 }
+  .B .acts .solid{ background:#2b2417; border:1px solid #2b2417; color:#efe7d4 }
+
+  /* =========================================================================
+     DIRECTION C — EURORACK PATCH PANEL
+     anodized-dark · Michroma / Inconsolata · patch-cables + hex screws + LED meter
+     ========================================================================= */
+  .C{
+    background:
+      linear-gradient(180deg,#23262b 0%, #1b1e22 100%);
+    border:1px solid #34383f; color:#d8dce2;
+    font-family:"Inconsolata",monospace;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+  }
+  .C::-webkit-scrollbar-thumb{ background:#3c424a }
+  .C .panel{ position:relative; }
+  /* hex screws at panel corners */
+  .C .screw{ position:absolute; width:13px; height:13px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #5a616b, #2a2e34 70%); z-index:7;
+    box-shadow:0 1px 1px rgba(0,0,0,.5), inset 0 0 0 1px #14171b }
+  .C .screw::after{ content:""; position:absolute; inset:3px; border-radius:1px;
+    background:linear-gradient(45deg, transparent 44%, #14171b 44% 56%, transparent 56%) }
+  .C .screw.tl{ top:9px; left:9px } .C .screw.tr{ top:9px; right:9px }
+
+  .C .chrome{ padding:13px 18px 11px; display:flex; align-items:center; justify-content:space-between;
+    border-bottom:1px solid #2c3037; }
+  .C .chrome .mod{ font-family:"Michroma",sans-serif; font-size:11px; letter-spacing:.08em; color:#aeb6c2 }
+  /* LED level meter */
+  .C .meter{ display:flex; gap:2px; align-items:flex-end; height:14px }
+  .C .meter i{ width:3px; border-radius:1px; background:#33383f }
+  .C .meter i.on{ background:var(--sage); box-shadow:0 0 4px rgba(126,231,135,.7) }
+  .C .meter i.amb{ background:var(--amber); box-shadow:0 0 4px rgba(255,203,107,.7) }
+
+  .C .tabs{ display:flex; padding:0 18px; border-bottom:1px solid #2c3037 }
+  .C .tabs button{ background:none; border:none; cursor:pointer; font-family:"Michroma",sans-serif;
+    font-size:8.5px; letter-spacing:.1em; color:#5d6571; padding:11px 0; margin-right:22px;
+    border-bottom:2px solid transparent }
+  .C .tabs button.on{ color:#d8dce2; border-bottom-color:var(--amber) }
+
+  .C .name-row{ padding:16px 18px 6px; display:flex; align-items:center; justify-content:space-between }
+  .C .name-row .name{ font-family:"Michroma",sans-serif; font-size:14px; letter-spacing:.02em; color:#eef1f5 }
+  .C .name-row .stat{ font-family:"Inconsolata",monospace; font-size:9px; font-weight:700; letter-spacing:.14em;
+    text-transform:uppercase; color:#160f02; background:var(--amber); padding:3px 8px; border-radius:10px }
+  .C .kind-row{ padding:0 18px 14px; font-size:10px; letter-spacing:.22em; text-transform:uppercase; color:#5d6571 }
+
+  /* patch bay: fields as labeled jacks linked by cables */
+  .C .bay{ position:relative; padding:6px 18px 12px }
+  .C .bay .cables{ position:absolute; inset:0; pointer-events:none; z-index:1 }
+  .C .bay .cables path{ fill:none; stroke-width:2.4; stroke-linecap:round; opacity:.85 }
+  .C .jack{ position:relative; z-index:2; display:grid; grid-template-columns:14px 58px 1fr; gap:10px;
+    align-items:center; padding:9px 0; border-bottom:1px solid #2a2e34 }
+  .C .jack .port{ width:13px; height:13px; border-radius:50%; background:#0e1014;
+    box-shadow:inset 0 0 0 2px #41495a, inset 0 0 5px rgba(0,0,0,.8) }
+  .C .jack.s-route .port{ box-shadow:inset 0 0 0 2px var(--sage), inset 0 0 5px rgba(0,0,0,.8) }
+  .C .jack.s-vm .port{ box-shadow:inset 0 0 0 2px var(--blue), inset 0 0 5px rgba(0,0,0,.8) }
+  .C .jack.s-amb .port{ box-shadow:inset 0 0 0 2px var(--amber), inset 0 0 5px rgba(0,0,0,.8) }
+  .C .jack .k{ font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:#6c7480 }
+  .C .jack .v{ font-size:13px; color:#cdd3db; word-break:break-word }
+  .C .jack .v.route{ color:var(--sage) } .C .jack .v.vm{ color:var(--blue) }
+  .C .jack .v .ln{ display:block; font-size:11px; color:#8b94a3 }
+  .C .ticks{ display:flex; gap:5px; flex-wrap:wrap }
+  .C .ticks span{ font-size:9px; letter-spacing:.04em; color:var(--purple);
+    border:1px solid #3a3450; padding:2px 7px; border-radius:9px }
+
+  .C .json{ margin:6px 18px 14px; padding:11px; background:#15181c; border:1px solid #2c3037;
+    border-radius:3px; font-size:10.5px; line-height:1.65; white-space:pre; overflow-x:auto; color:#6c7480 }
+  .C .json .jk{ color:var(--coral) } .C .json .js{ color:var(--sage) } .C .json .jn{ color:var(--amber) }
+
+  .C .acts{ display:flex; gap:8px; padding:0 18px 20px }
+  .C .acts button{ flex:1; font-family:"Michroma",sans-serif; font-size:8.5px; letter-spacing:.06em;
+    padding:11px 6px; border-radius:3px; cursor:pointer }
+  .C .acts .ghost{ background:#1f2227; border:1px solid #3c424a; color:#aeb6c2 }
+  .C .acts .solid{ background:var(--amber); border:1px solid var(--amber); color:#160f02 }
+
+  .foot{ position:relative; z-index:1; max-width:1320px; margin:48px auto 0; padding-top:24px;
+    border-top:1px solid #1e242c; font-family:"Literata",serif; font-size:13px; color:#79828f; line-height:1.7 }
+  .foot b{ color:#cfd5de; font-weight:600; font-family:"Chivo Mono",monospace; font-size:11px; letter-spacing:.04em }
+  @media (max-width:520px){ .col,.rail,.B .filetab{ width:100%; flex-basis:100% } }
+</style>
+</head>
+<body>
+
+  <header class="page-head">
+    <div class="kicker">Atlas · Side Rail Exploration</div>
+    <h1>Three ways the inspector rail could feel.</h1>
+    <p>Same 372&times;724 panel, same node (<em>PatientDetail</em>, live), three aesthetics drawn to be mutually distinct. Each treats the rail's job — provenance, fields, the model the agent sees — through a different instrument. Hover the dossier's redaction bars; watch A's trace draw.</p>
+  </header>
+
+  <div class="rails">
+
+    <!-- ============ A ============ -->
+    <div class="col">
+      <div class="cap">
+        <div class="tag"><b>A</b> · Lab instrument readout</div>
+        <div class="desc">The node's <i>edge-shape</i> rendered as an oscilloscope trace; fields read as instrument channels. Phosphor on near-black, a slow scanline sweeping the rail.</div>
+      </div>
+      <div class="rail A">
+        <div class="scan"></div>
+        <div class="chrome"><span class="ch-l">CH ·  NODE READOUT</span><span class="ch-r"><span class="led"></span>LIVE</span></div>
+        <div class="tabs"><button>Agent</button><button class="on">Inspector</button></div>
+
+        <div class="scope">
+          <span class="label">EDGE TRACE · IN/OUT</span><span class="ch">5 ch</span>
+          <svg viewBox="0 0 340 118" preserveAspectRatio="none">
+            <path class="trace" d="M0,80 L40,80 L52,30 L92,30 L104,86 L150,86 L162,40 L210,40 L222,70 L268,70 L280,22 L340,22"/>
+            <path class="trace dim" d="M0,96 L120,96 L132,60 L200,60 L212,100 L340,100"/>
+          </svg>
+          <div class="sweep"></div>
+        </div>
+
+        <div class="head">
+          <div class="name">PatientDetail</div>
+          <div class="sub"><span class="kind">Page</span><span class="stat">Live</span></div>
+        </div>
+
+        <div class="chan"><span class="k">Route</span><span class="v route">patients/{id}</span></div>
+        <div class="chan"><span class="k">View</span><span class="v">PatientDetailPage</span></div>
+        <div class="chan"><span class="k">Model</span><span class="v vm">PatientDetailModel</span></div>
+        <div class="chan"><span class="k">Files</span><span class="v list"><span>Views/PatientDetailPage.xaml</span><span>Presentation/PatientDetailModel.cs</span></span></div>
+        <div class="chan"><span class="k">Elem</span><span class="v list"><span>Pivot Sections</span><span>CommandBar Actions</span></span></div>
+        <div class="chan"><span class="k">Tokens</span><span class="v"><span class="ticks"><span>PivotHeaderItem</span><span>AccentBrush</span></span></span></div>
+
+        <div class="json"><span class="jk">"id"</span>: <span class="js">"pdetail"</span>,
+<span class="jk">"kind"</span>: <span class="js">"page"</span>,
+<span class="jk">"status"</span>: <span class="js">"live"</span>,
+<span class="jk">"edges_in"</span>: <span class="jn">2</span>, <span class="jk">"out"</span>: <span class="jn">4</span></div>
+
+        <div class="acts"><button class="ghost">Jump ↪</button><button class="solid">Scope edit</button></div>
+      </div>
+    </div>
+
+    <!-- ============ B ============ -->
+    <div class="col">
+      <div class="cap">
+        <div class="tag"><b>B</b> · Redacted dossier</div>
+        <div class="desc">The rail inverts to manila against the dark canvas. Provenance becomes a <i>classification stamp</i>; the model peek is redacted until you hover to declassify it.</div>
+      </div>
+      <div class="rail B">
+        <div class="filetab">CASE · PDETAIL</div>
+        <div class="mast">
+          <div class="org">Atlas Field Office</div>
+          <div class="title">SUBJECT DOSSIER</div>
+          <div class="nums">REF 08-PDETAIL · CLASS: RUNTIME</div>
+        </div>
+        <div class="tabs"><button>Agent</button><button class="on">Inspector</button></div>
+
+        <div class="subj">
+          <div class="name">PatientDetail<span class="kind">Page</span></div>
+          <div><span class="stamp">● ACTIVE</span></div>
+        </div>
+
+        <div class="rec"><span class="k">Route</span><span class="v mono route">patients/{id}</span></div>
+        <div class="rec"><span class="k">View</span><span class="v mono">PatientDetailPage</span></div>
+        <div class="rec"><span class="k">Model</span><span class="v mono vm">PatientDetailModel</span></div>
+        <div class="rec"><span class="k">Files</span><span class="v mono"><span class="ln">Views/PatientDetailPage.xaml</span><span class="ln">Presentation/PatientDetailModel.cs</span></span></div>
+        <div class="rec"><span class="k">Elements</span><span class="v mono"><span class="ln">Pivot Sections</span><span class="ln">CommandBar Actions</span></span></div>
+        <div class="rec"><span class="k">Tokens</span><span class="v"><span class="chips"><span>PivotHeaderItem</span><span>AccentBrush</span></span></span></div>
+
+        <div class="redact">
+          <div class="k">Model · as the agent sees it</div>
+          <div class="body">{ "id": "pdetail", "name": "PatientDetail",
+  "kind": "page", "status": "live",
+  "route": "patients/{id}" }</div>
+          <span class="bar" style="top:30px;left:40px;width:118px"></span>
+          <span class="bar" style="top:47px;left:26px;width:150px"></span>
+          <span class="bar" style="top:64px;left:26px;width:96px"></span>
+          <div class="hint">hover to declassify</div>
+        </div>
+
+        <div class="acts"><button class="ghost">Jump to live</button><button class="solid">Scope edit</button></div>
+      </div>
+    </div>
+
+    <!-- ============ C ============ -->
+    <div class="col">
+      <div class="cap">
+        <div class="tag"><b>C</b> · Eurorack patch panel</div>
+        <div class="desc">Fields become labeled <i>jacks</i> wired by provenance-colored patch cables; status is an LED level meter; hex screws anchor the module. The wiring is the wayfinding.</div>
+      </div>
+      <div class="rail C">
+        <div class="panel">
+          <span class="screw tl"></span><span class="screw tr"></span>
+          <div class="chrome">
+            <span class="mod">NODE · 1U</span>
+            <span class="meter"><i style="height:5px" class="on"></i><i style="height:8px" class="on"></i><i style="height:11px" class="on"></i><i style="height:14px" class="amb"></i><i style="height:9px"></i><i style="height:6px"></i></span>
+          </div>
+          <div class="tabs"><button>AGENT</button><button class="on">INSP</button></div>
+
+          <div class="name-row"><span class="name">PatientDetail</span><span class="stat">live</span></div>
+          <div class="kind-row">Page</div>
+
+          <div class="bay">
+            <svg class="cables" viewBox="0 0 336 240" preserveAspectRatio="none">
+              <path d="M22,26 C90,40 60,150 150,168" stroke="var(--sage)"/>
+              <path d="M22,72 C120,90 80,40 240,30" stroke="var(--blue)"/>
+              <path d="M22,118 C70,150 120,200 200,214" stroke="var(--amber)"/>
+            </svg>
+            <div class="jack s-route"><span class="port"></span><span class="k">Route</span><span class="v route">patients/{id}</span></div>
+            <div class="jack s-vm"><span class="port"></span><span class="k">Model</span><span class="v vm">PatientDetailModel</span></div>
+            <div class="jack s-amb"><span class="port"></span><span class="k">View</span><span class="v">PatientDetailPage</span></div>
+            <div class="jack"><span class="port"></span><span class="k">Files</span><span class="v"><span class="ln">Views/PatientDetailPage.xaml</span><span class="ln">Presentation/PatientDetailModel.cs</span></span></div>
+            <div class="jack"><span class="port"></span><span class="k">Elem</span><span class="v"><span class="ln">Pivot Sections</span><span class="ln">CommandBar Actions</span></span></div>
+            <div class="jack"><span class="port"></span><span class="k">Tokens</span><span class="v"><span class="ticks"><span>PivotHeaderItem</span><span>AccentBrush</span></span></span></div>
+          </div>
+
+          <div class="json"><span class="jk">"id"</span>: <span class="js">"pdetail"</span>,
+<span class="jk">"status"</span>: <span class="js">"live"</span>,
+<span class="jk">"route"</span>: <span class="js">"patients/{id}"</span></div>
+
+          <div class="acts"><button class="ghost">JUMP</button><button class="solid">SCOPE EDIT</button></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="foot">
+    <p>Same payload, three instruments. <b>A</b> leans into Atlas's existing phosphor-and-trace language and keeps the dark rail; <b>B</b> breaks the dark to make provenance feel like classification and turns the JSON peek into a deliberate reveal; <b>C</b> turns the field list into a wiring diagram where color already does double duty as provenance. Pick one to port to XAML, or mix axes — e.g. A's trace header on C's jack-list body.</p>
+  </footer>
+
+</body>
+</html>

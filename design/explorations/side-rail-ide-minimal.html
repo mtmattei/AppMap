@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Atlas Side Rail — IDE Minimal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;450;500;600&family=Geist+Mono:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    /* Atlas palette — kept on-brand, used with IDE restraint */
+    --canvas:#0E1014;
+    --panel:#14171D;      /* rail background  */
+    --surface:#181C23;    /* recessed wells   */
+    --surface2:#1E232C;   /* hover / active    */
+    --border:#222934;     /* hairline          */
+    --border2:#2C3440;    /* slightly stronger */
+    --text:#E6E9EF; --muted:#8B94A3; --muted2:#5D6571;
+    --amber:#FFCB6B;      /* live / primary    */
+    --sage:#7EE787;       /* observed / strings*/
+    --blue:#79C0FF;       /* declared / types  */
+    --coral:#FF7B72;      /* unreachable / warn*/
+    --purple:#D2A8FF;     /* shell             */
+
+    --ui:"Geist","Segoe UI",system-ui,sans-serif;
+    --mono:"Geist Mono","Cascadia Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{ -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility }
+  body{
+    background:var(--canvas); color:var(--text); font-family:var(--ui);
+    min-height:100vh; padding:44px clamp(20px,4vw,72px) 96px; font-size:13px;
+  }
+  body::before{ /* faint canvas dot-grid, like the real Atlas backdrop */
+    content:""; position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.5;
+    background:radial-gradient(circle at 1px 1px, rgba(255,255,255,.04) 1px, transparent 0) 0 0/30px 30px;
+  }
+
+  .head{ position:relative; z-index:1; max-width:1180px; margin:0 auto 36px }
+  .head .kicker{ font-family:var(--mono); font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted2) }
+  .head h1{ font-weight:500; font-size:clamp(24px,3vw,36px); letter-spacing:-.02em; margin:8px 0 10px }
+  .head p{ color:var(--muted); font-size:14px; line-height:1.6; max-width:62ch }
+  .head p b{ color:var(--text); font-weight:500 }
+
+  .stage{ position:relative; z-index:1; display:flex; gap:clamp(24px,4vw,56px);
+    flex-wrap:wrap; justify-content:center; max-width:1180px; margin:0 auto; align-items:flex-start }
+  .col{ width:372px; flex:0 0 372px }
+  .col .label{ font-family:var(--mono); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--muted2); margin-bottom:12px; display:flex; align-items:center; gap:8px }
+  .col .label::after{ content:""; flex:1; height:1px; background:var(--border) }
+
+  /* ---- the rail ---- */
+  .rail{
+    width:372px; height:726px; background:var(--panel);
+    border:1px solid var(--border); border-radius:6px; overflow:hidden auto;
+    display:flex; flex-direction:column; position:relative;
+  }
+  .rail::-webkit-scrollbar{ width:10px }
+  .rail::-webkit-scrollbar-thumb{ background:var(--border2); border-radius:5px; border:3px solid var(--panel) }
+
+  /* tab strip — thin, sliding accent underline */
+  .tabs{ display:flex; height:40px; flex:0 0 40px; border-bottom:1px solid var(--border); position:relative }
+  .tabs button{ flex:0 0 auto; background:none; border:none; cursor:pointer; font-family:var(--ui);
+    font-size:11.5px; letter-spacing:.02em; color:var(--muted); padding:0 16px; height:100%;
+    display:flex; align-items:center; gap:7px; transition:color .15s }
+  .tabs button .dot{ width:6px; height:6px; border-radius:50%; background:var(--muted2) }
+  .tabs button[aria-selected="true"]{ color:var(--text) }
+  .tabs .ink{ position:absolute; bottom:-1px; height:2px; background:var(--amber); transition:transform .22s cubic-bezier(.2,.7,.2,1), width .22s cubic-bezier(.2,.7,.2,1) }
+
+  /* node header — Solution-Explorer style tree node */
+  .node{ padding:16px 16px 12px; display:flex; align-items:flex-start; gap:10px }
+  .node .glyph{ width:18px; height:18px; flex:0 0 18px; margin-top:1px; border-radius:3px;
+    display:grid; place-items:center; background:var(--surface); border:1px solid var(--border2) }
+  .node .glyph svg{ width:11px; height:11px; stroke:var(--blue); fill:none; stroke-width:1.4 }
+  .node .meta{ flex:1; min-width:0 }
+  .node .name{ font-size:16px; font-weight:500; letter-spacing:-.01em; line-height:1.1 }
+  .node .crumb{ font-family:var(--mono); font-size:11px; color:var(--sage); margin-top:5px;
+    display:flex; align-items:center; gap:4px; flex-wrap:wrap }
+  .node .crumb .sep{ color:var(--muted2) }
+  .node .pill{ flex:0 0 auto; font-family:var(--mono); font-size:9px; font-weight:500; letter-spacing:.08em;
+    text-transform:uppercase; color:#160F02; background:var(--amber); padding:2px 7px; border-radius:3px; margin-top:2px }
+
+  /* hairline provenance status-spine */
+  .body{ position:relative; flex:1 }
+  .body .spine{ position:absolute; left:0; top:0; bottom:0; width:2px; background:var(--amber); opacity:.55 }
+
+  /* collapsible disclosure sections */
+  details{ border-top:1px solid var(--border) }
+  summary{ list-style:none; cursor:pointer; user-select:none; padding:10px 16px 10px 16px;
+    display:flex; align-items:center; gap:8px; font-family:var(--mono); font-size:10px;
+    letter-spacing:.14em; text-transform:uppercase; color:var(--muted); transition:color .12s }
+  summary::-webkit-details-marker{ display:none }
+  summary:hover{ color:var(--text) }
+  summary .caret{ width:8px; height:8px; flex:0 0 8px; transition:transform .18s ease }
+  summary .caret svg{ width:8px; height:8px; stroke:var(--muted2); fill:none; stroke-width:1.6 }
+  details[open] summary .caret{ transform:rotate(90deg) }
+  summary .count{ margin-left:auto; color:var(--muted2); font-size:9.5px; letter-spacing:.06em }
+  .sect{ padding:2px 16px 12px }
+
+  /* properties grid: key | value */
+  .grid{ display:grid; grid-template-columns:84px 1fr; gap:2px 12px }
+  .grid .k{ font-size:11px; color:var(--muted); padding:5px 0 5px 0; letter-spacing:.01em }
+  .grid .v{ font-family:var(--mono); font-size:12px; color:var(--text); padding:5px 6px; border-radius:3px;
+    word-break:break-word; transition:background .12s }
+  .grid .v:hover{ background:var(--surface) }
+  .grid .v.route{ color:var(--sage) } .grid .v.type{ color:var(--blue) }
+
+  /* plain rows (files / elements) */
+  .rows{ display:flex; flex-direction:column }
+  .rows .row{ font-family:var(--mono); font-size:11.5px; color:var(--muted); padding:5px 8px; border-radius:3px;
+    display:flex; align-items:center; gap:8px; transition:background .12s, color .12s }
+  .rows .row:hover{ background:var(--surface); color:var(--text) }
+  .rows .row .fi{ width:9px; height:11px; flex:0 0 9px; border:1px solid var(--border2); border-radius:1.5px; opacity:.7 }
+
+  /* token chips — quiet outline */
+  .chips{ display:flex; flex-wrap:wrap; gap:6px }
+  .chips span{ font-family:var(--mono); font-size:10px; color:var(--purple);
+    border:1px solid var(--border2); padding:2px 8px; border-radius:4px }
+
+  /* model peek */
+  .json{ font-family:var(--mono); font-size:10.5px; line-height:1.7; white-space:pre; overflow-x:auto;
+    background:var(--surface); border:1px solid var(--border); border-radius:4px; padding:11px; color:var(--muted) }
+  .json .jk{ color:var(--coral) } .json .js{ color:var(--sage) } .json .jn{ color:var(--amber) } .json .jp{ color:var(--muted2) }
+
+  /* command bar */
+  .cmd{ margin-top:auto; border-top:1px solid var(--border); padding:12px 16px; display:flex; gap:8px }
+  .cmd button{ flex:1; font-family:var(--ui); font-size:12px; letter-spacing:.01em; padding:8px 10px;
+    border-radius:4px; cursor:pointer; transition:.15s; display:flex; align-items:center; justify-content:center; gap:6px }
+  .cmd .ghost{ background:transparent; border:1px solid var(--border2); color:var(--text) }
+  .cmd .ghost:hover{ border-color:var(--blue); color:var(--blue) }
+  .cmd .primary{ background:var(--amber); border:1px solid var(--amber); color:#160F02; font-weight:500 }
+  .cmd .primary:hover{ filter:brightness(1.06) }
+
+  /* ---- agent pane (same language) ---- */
+  .agent{ padding:16px }
+  .agent .lead{ font-size:13.5px; line-height:1.6; color:var(--muted) }
+  .agent .lead b{ color:var(--text); font-weight:500 }
+  .agent .q{ display:flex; flex-direction:column; gap:6px; margin:16px 0 6px }
+  .agent .q button{ text-align:left; background:var(--surface); border:1px solid var(--border);
+    border-radius:5px; color:var(--text); font-family:var(--ui); font-size:12.5px; padding:9px 12px;
+    cursor:pointer; display:flex; align-items:center; gap:9px; transition:.13s }
+  .agent .q button:hover{ background:var(--surface2); border-color:var(--border2) }
+  .agent .q button .verb{ font-family:var(--mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--amber); flex:0 0 auto }
+  .agent .ans{ margin-top:16px; border-top:1px solid var(--border); padding-top:14px }
+  .agent .ans .who{ font-family:var(--mono); font-size:9.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted2); margin-bottom:8px }
+  .agent .ans p{ font-size:13.5px; line-height:1.62; color:var(--text) }
+  .agent .ans p em{ color:var(--amber); font-style:normal }
+  .agent .ans p code{ font-family:var(--mono); font-size:11.5px; color:var(--sage); background:var(--surface); padding:1px 5px; border-radius:3px }
+  .agent .clear{ margin-top:14px; background:none; border:none; color:var(--muted); font-family:var(--ui);
+    font-size:11.5px; cursor:pointer; padding:0 }
+  .agent .clear:hover{ color:var(--text) }
+
+  .foot{ position:relative; z-index:1; max-width:1180px; margin:42px auto 0; padding-top:22px;
+    border-top:1px solid var(--border); color:var(--muted); font-size:13.5px; line-height:1.7 }
+  .foot b{ color:var(--text); font-weight:500 }
+  .foot code{ font-family:var(--mono); font-size:12px; color:var(--sage) }
+  @media (max-width:520px){ .col,.rail{ width:100%; flex-basis:100% } }
+</style>
+</head>
+<body>
+
+  <header class="head">
+    <div class="kicker">Atlas · Side Rail</div>
+    <h1>IDE&#8202;minimal — a quiet Visual&nbsp;Studio.</h1>
+    <p>Atlas's own palette, worn with restraint: hairline rules, a two-column properties grid, collapsible <b>Solution-Explorer</b> sections, monospace values, one accent doing the work. The route reads as a breadcrumb; a thin provenance spine runs the left edge. Click a section header to collapse it.</p>
+  </header>
+
+  <div class="stage">
+
+    <!-- INSPECTOR -->
+    <div class="col">
+      <div class="label">Inspector</div>
+      <div class="rail">
+        <div class="tabs">
+          <button class="t" aria-selected="false"><span class="dot"></span>Agent</button>
+          <button class="t" aria-selected="true">Inspector</button>
+          <span class="ink" style="left:0"></span>
+        </div>
+
+        <div class="node">
+          <span class="glyph" title="Page">
+            <svg viewBox="0 0 12 12"><rect x="1.5" y="1" width="9" height="10" rx="1"/><line x1="3.5" y1="4" x2="8.5" y2="4"/><line x1="3.5" y1="6.5" x2="8.5" y2="6.5"/></svg>
+          </span>
+          <div class="meta">
+            <div class="name">PatientDetail</div>
+            <div class="crumb">patients<span class="sep">/</span>{id}</div>
+          </div>
+          <span class="pill">live</span>
+        </div>
+
+        <div class="body">
+          <div class="spine"></div>
+
+          <details open>
+            <summary><span class="caret"><svg viewBox="0 0 8 8"><polyline points="2,1 6,4 2,7"/></svg></span>Source</summary>
+            <div class="sect">
+              <div class="grid">
+                <div class="k">Kind</div><div class="v">Page</div>
+                <div class="k">View</div><div class="v">PatientDetailPage</div>
+                <div class="k">View-model</div><div class="v type">PatientDetailModel</div>
+              </div>
+            </div>
+          </details>
+
+          <details open>
+            <summary><span class="caret"><svg viewBox="0 0 8 8"><polyline points="2,1 6,4 2,7"/></svg></span>Files<span class="count">2</span></summary>
+            <div class="sect">
+              <div class="rows">
+                <div class="row"><span class="fi"></span>Views/PatientDetailPage.xaml</div>
+                <div class="row"><span class="fi"></span>Presentation/PatientDetailModel.cs</div>
+              </div>
+            </div>
+          </details>
+
+          <details open>
+            <summary><span class="caret"><svg viewBox="0 0 8 8"><polyline points="2,1 6,4 2,7"/></svg></span>Elements<span class="count">2</span></summary>
+            <div class="sect">
+              <div class="rows">
+                <div class="row"><span class="fi"></span>Pivot Sections</div>
+                <div class="row"><span class="fi"></span>CommandBar Actions</div>
+              </div>
+            </div>
+          </details>
+
+          <details open>
+            <summary><span class="caret"><svg viewBox="0 0 8 8"><polyline points="2,1 6,4 2,7"/></svg></span>Theme tokens<span class="count">2</span></summary>
+            <div class="sect">
+              <div class="chips"><span>PivotHeaderItem</span><span>AccentBrush</span></div>
+            </div>
+          </details>
+
+          <details>
+            <summary><span class="caret"><svg viewBox="0 0 8 8"><polyline points="2,1 6,4 2,7"/></svg></span>Model · as the agent sees it</summary>
+            <div class="sect">
+<div class="json">{
+  <span class="jk">"id"</span>: <span class="js">"pdetail"</span>,
+  <span class="jk">"kind"</span>: <span class="js">"page"</span>,
+  <span class="jk">"route"</span>: <span class="js">"patients/{id}"</span>,
+  <span class="jk">"status"</span>: <span class="js">"live"</span>,
+  <span class="jk">"edges"</span>: { <span class="jk">"in"</span>: <span class="jn">2</span>, <span class="jk">"out"</span>: <span class="jn">4</span> }
+}</div>
+            </div>
+          </details>
+        </div>
+
+        <div class="cmd">
+          <button class="ghost">Jump to live</button>
+          <button class="primary">Scope edit</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AGENT (same language) -->
+    <div class="col">
+      <div class="label">Agent</div>
+      <div class="rail">
+        <div class="tabs">
+          <button class="t" aria-selected="true"><span class="dot"></span>Agent</button>
+          <button class="t" aria-selected="false">Inspector</button>
+          <span class="ink" style="left:0; width:64px"></span>
+        </div>
+
+        <div class="agent">
+          <p class="lead">The agent reads the same graph you see. Ask about the structure of <b>RoundsApp</b>, or point it at a screen to scope an edit.</p>
+
+          <div class="q">
+            <button><span class="verb">find</span>Orphaned screens</button>
+            <button><span class="verb">show</span>Every path to MedAdministration</button>
+            <button><span class="verb">detect</span>Duplicated screens</button>
+            <button><span class="verb">find</span>Unreachable routes</button>
+          </div>
+
+          <div class="ans">
+            <div class="who">Agent</div>
+            <p>A single path: <code>Login → AppShell → Dashboard → PatientList → PatientDetail → MedAdministration</code>. The final hop is <em>declared but never observed</em> this session — a high-risk medication flow with no runtime coverage.</p>
+            <button class="clear">Clear highlights</button>
+          </div>
+        </div>
+
+        <div class="cmd">
+          <button class="ghost">Reset view</button>
+          <button class="primary">Run query</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="foot">
+    <p><b>Why this reads as VS, minimally:</b> low-contrast hairlines instead of cards, a properties grid instead of stacked labels, collapsible <code>&lt;details&gt;</code> sections like Solution Explorer, sans labels paired with mono values, and exactly one accent (amber) — on the active-tab underline, the live pill, and the primary command. Everything else is graphite and negative space. It ports to XAML 1:1 because it already uses the Atlas palette; the only new pieces are the disclosure <code>Expander</code>s and the two-column grid.</p>
+  </footer>
+
+  <script>
+    // sliding tab ink (presentation only)
+    document.querySelectorAll('.rail').forEach(rail=>{
+      const tabs=[...rail.querySelectorAll('.tabs .t')], ink=rail.querySelector('.ink');
+      const place=btn=>{ ink.style.width=btn.offsetWidth+'px'; ink.style.transform=`translateX(${btn.offsetLeft}px)`; };
+      const sel=rail.querySelector('.tabs .t[aria-selected="true"]'); if(sel) place(sel);
+      tabs.forEach(b=>b.addEventListener('click',()=>{ tabs.forEach(t=>t.setAttribute('aria-selected','false')); b.setAttribute('aria-selected','true'); place(b); }));
+    });
+  </script>
+</body>
+</html>

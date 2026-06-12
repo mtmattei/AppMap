@@ -6,6 +6,37 @@
 
   <FontFamily x:Key="AtlasMonoFontFamily">Cascadia Mono</FontFamily>
   <FontFamily x:Key="AtlasSerifFontFamily">Georgia</FontFamily>
+  <!-- Clean UI sans for IDE-minimal labels (the "Geist/Segoe UI" role). -->
+  <FontFamily x:Key="AtlasUiFontFamily">Segoe UI</FontFamily>
+
+  <!-- Node / panel title: clean sans, medium weight -->
+  <Style x:Key="AtlasUiName" TargetType="TextBlock" BasedOn="{StaticResource TitleMedium}">
+    <Setter Property="FontFamily" Value="{StaticResource AtlasUiFontFamily}" />
+    <Setter Property="FontWeight" Value="Medium" />
+    <Setter Property="Foreground" Value="{StaticResource AtlasTextBrush}" />
+  </Style>
+
+  <!-- Properties-grid key: small sans, muted -->
+  <Style x:Key="AtlasUiKey" TargetType="TextBlock" BasedOn="{StaticResource BodySmall}">
+    <Setter Property="FontFamily" Value="{StaticResource AtlasUiFontFamily}" />
+    <Setter Property="Foreground" Value="{StaticResource AtlasTextMutedBrush}" />
+  </Style>
+
+  <!-- Sans body and prose (replaces serif in the IDE-minimal rail) -->
+  <Style x:Key="AtlasUiBody" TargetType="TextBlock" BasedOn="{StaticResource BodyMedium}">
+    <Setter Property="FontFamily" Value="{StaticResource AtlasUiFontFamily}" />
+    <Setter Property="Foreground" Value="{StaticResource AtlasTextBrush}" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+  <Style x:Key="AtlasUiMuted" TargetType="TextBlock" BasedOn="{StaticResource AtlasUiBody}">
+    <Setter Property="Foreground" Value="{StaticResource AtlasTextMutedBrush}" />
+  </Style>
+  <Style x:Key="AtlasUiProse" TargetType="TextBlock" BasedOn="{StaticResource BodyLarge}">
+    <Setter Property="FontFamily" Value="{StaticResource AtlasUiFontFamily}" />
+    <Setter Property="Foreground" Value="{StaticResource AtlasTextBrush}" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+    <Setter Property="LineHeight" Value="22" />
+  </Style>
 
   <!-- Small uppercase chrome labels: node kind, field keys, pane headers -->
   <Style x:Key="AtlasMonoCaption" TargetType="TextBlock" BasedOn="{StaticResource LabelSmall}">
