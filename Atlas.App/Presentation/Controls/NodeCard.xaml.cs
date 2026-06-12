@@ -63,6 +63,9 @@ public sealed partial class NodeCard : UserControl
         set => SetValue(MoveCommandProperty, value);
     }
 
+    /// <summary>Raised continuously while the card is dragged, with its provisional position.</summary>
+    public event EventHandler<NodeMove>? DragDelta;
+
     private UIElement Reference => VisualTreeHelper.GetParent(this) as UIElement ?? this;
 
     private void OnPointerPressed(object sender, PointerRoutedEventArgs e)
@@ -99,6 +102,10 @@ public sealed partial class NodeCard : UserControl
         {
             _dragTransform.X = dx;
             _dragTransform.Y = dy;
+            if (DataContext is AppNode { Position: { } origin } node)
+            {
+                DragDelta?.Invoke(this, new NodeMove(node.Id, Math.Max(0, origin.X + dx), Math.Max(0, origin.Y + dy)));
+            }
             e.Handled = true;
         }
     }

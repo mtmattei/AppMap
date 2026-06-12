@@ -2,7 +2,7 @@ using Atlas.Core;
 
 namespace Atlas.App.Presentation;
 
-public partial record MapModel(IRuntimeBridge Bridge)
+public partial record MapModel(IRuntimeBridge Bridge, IModelFilePicker Picker, ILogger<MapModel> Logger)
 {
     // Named Graph because the MVUX generator reserves 'Model' on the generated ViewModel.
     // Starts as the static model; every observed route from a connected agent re-emits.
@@ -35,6 +35,24 @@ public partial record MapModel(IRuntimeBridge Bridge)
     {
         Bridge.MoveNode(move.NodeId, move.X, move.Y);
         return default;
+    }
+
+    public async ValueTask OpenModel(CancellationToken ct)
+    {
+        var json = await Picker.PickModelJsonAsync(ct);
+        if (json is null)
+        {
+            return;
+        }
+
+        try
+        {
+            Bridge.OpenModel(AppModelJson.Deserialize(json));
+        }
+        catch (System.Text.Json.JsonException ex)
+        {
+            Logger.LogWarning(ex, "The picked file is not a valid app model.");
+        }
     }
 
     public async ValueTask FindOrphans(CancellationToken ct) =>

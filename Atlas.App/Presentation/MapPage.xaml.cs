@@ -103,6 +103,37 @@ public sealed partial class MapPage : Page
         _panning = false;
     }
 
+    // ----- live edge re-routing while a node is dragged -----
+
+    private Controls.EdgeLayer? _edgeLayer;
+
+    private void NodeCard_DragDelta(object? sender, NodeMove move)
+    {
+        if (_edgeLayer is null || _edgeLayer.XamlRoot is null)
+        {
+            _edgeLayer = FindDescendant<Controls.EdgeLayer>(MapZoom);
+        }
+
+        _edgeLayer?.PreviewNodePosition(move.NodeId, new Atlas.Core.Point(move.X, move.Y));
+    }
+
+    private static T? FindDescendant<T>(DependencyObject root) where T : class
+    {
+        for (var i = 0; i < Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var child = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChild(root, i);
+            if (child is T match)
+            {
+                return match;
+            }
+            if (FindDescendant<T>(child) is { } nested)
+            {
+                return nested;
+            }
+        }
+        return null;
+    }
+
     // ----- double-tap focuses a node: zoom to 1:1 and center it -----
 
     private void NodeCard_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)

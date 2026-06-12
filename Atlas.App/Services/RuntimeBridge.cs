@@ -10,7 +10,7 @@ namespace Atlas.App.Services;
 /// The static model is the starting point; every agent route event produces a
 /// new merged snapshot pushed to all subscribers.
 /// </summary>
-public sealed class RuntimeBridge(IAppModelSource modelSource) : IRuntimeBridge, IDisposable
+public sealed class RuntimeBridge(IAppModelSource modelSource, ILayoutStore layoutStore) : IRuntimeBridge, IDisposable
 {
     private readonly object _gate = new();
     private readonly List<Channel<AppModel>> _modelSubscribers = [];
@@ -85,20 +85,57 @@ public sealed class RuntimeBridge(IAppModelSource modelSource) : IRuntimeBridge,
             }
         }
 
-        var model = await modelSource.LoadAsync(ct);
+        var model = ApplyStoredLayout(await modelSource.LoadAsync(ct));
         lock (_gate)
         {
             if (_current is null)
             {
                 _current = model;
-                _listener = new RuntimeListener();
-                _listener.MessageReceived += OnMessage;
-                _listener.ConnectionChanged += OnConnectionChanged;
-                _listener.Start();
+                try
+                {
+                    _listener = new RuntimeListener();
+                    _listener.MessageReceived += OnMessage;
+                    _listener.ConnectionChanged += OnConnectionChanged;
+                    _listener.Start();
+                }
+                catch (Exception)
+                {
+                    // No sockets on this platform (e.g. WebAssembly) — the viewer stays static.
+                    _listener = null;
+                }
             }
 
             return _current;
         }
+    }
+
+    /// <summary>Replaces the current model (e.g. a model file opened by the user).</summary>
+    public void OpenModel(AppModel model)
+    {
+        lock (_gate)
+        {
+            _current = ApplyStoredLayout(model);
+            _previousNodeId = null;
+            foreach (var subscriber in _modelSubscribers)
+            {
+                subscriber.Writer.TryWrite(_current);
+            }
+        }
+    }
+
+    private AppModel ApplyStoredLayout(AppModel model)
+    {
+        if (layoutStore.Load(model.App) is not { Count: > 0 } stored)
+        {
+            return model;
+        }
+
+        return model with
+        {
+            Nodes = model.Nodes
+                .Select(n => stored.TryGetValue(n.Id, out var p) ? n with { Position = p } : n)
+                .ToList(),
+        };
     }
 
     private void OnMessage(object? sender, AgentMessage message)
@@ -146,6 +183,9 @@ public sealed class RuntimeBridge(IAppModelSource modelSource) : IRuntimeBridge,
                     .Select(n => n.Id == nodeId ? n with { Position = new Atlas.Core.Point(x, y) } : n)
                     .ToList(),
             };
+            layoutStore.Save(
+                _current.App,
+                _current.Nodes.Where(n => n.Position is not null).ToDictionary(n => n.Id, n => n.Position!));
             foreach (var subscriber in _modelSubscribers)
             {
                 subscriber.Writer.TryWrite(_current);

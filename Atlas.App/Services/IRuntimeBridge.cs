@@ -12,4 +12,7 @@ public interface IRuntimeBridge
 
     /// <summary>Moves a node to a new canvas position and re-emits the model.</summary>
     void MoveNode(string nodeId, double x, double y);
+
+    /// <summary>Replaces the current model (e.g. a model file opened by the user).</summary>
+    void OpenModel(AppModel model);
 }

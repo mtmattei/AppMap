@@ -86,6 +86,10 @@
       <utu:AutoLayout Orientation="Horizontal"
                       Spacing="8"
                       CounterAxisAlignment="Center">
+        <Button Content="Open model…"
+                Style="{StaticResource TextButtonStyle}"
+                Command="{Binding OpenModel}"
+                AutomationProperties.Name="Open an app model file" />
         <Border CornerRadius="999"
                 Padding="11,5"
                 BorderBrush="{StaticResource AtlasBorderBrush}"
@@ -161,6 +165,7 @@
                           <controls:NodeCard SelectedId="{Binding DataContext.Selected.Id, ElementName=Root, Mode=OneWay}"
                                              HighlightedIds="{Binding DataContext.AgentResult.NodeIds, ElementName=Root, Mode=OneWay}"
                                              MoveCommand="{Binding DataContext.MoveNode, ElementName=Root, Mode=OneWay}"
+                                             DragDelta="NodeCard_DragDelta"
                                              DoubleTapped="NodeCard_DoubleTapped" />
                         </DataTemplate>
                       </ItemsRepeater.ItemTemplate>

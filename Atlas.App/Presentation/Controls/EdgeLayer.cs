@@ -99,8 +99,25 @@ public partial class EdgeLayer : Canvas
         set => SetValue(HighlightedEdgeKeysProperty, value);
     }
 
-    private static void OnLayerChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) =>
-        ((EdgeLayer)d).Rebuild();
+    private readonly Dictionary<string, Atlas.Core.Point> _previewPositions = new();
+
+    private static void OnLayerChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var layer = (EdgeLayer)d;
+        if (e.Property == SourceProperty)
+        {
+            layer._previewPositions.Clear(); // a new snapshot carries the committed positions
+        }
+
+        layer.Rebuild();
+    }
+
+    /// <summary>Routes edges against a provisional node position while it is being dragged.</summary>
+    public void PreviewNodePosition(string nodeId, Atlas.Core.Point position)
+    {
+        _previewPositions[nodeId] = position;
+        Rebuild();
+    }
 
     private void Rebuild()
     {
@@ -129,9 +146,12 @@ public partial class EdgeLayer : Canvas
             }
 
             var isHighlighted = edgeKeys?.Contains(EdgeKey(edge)) == true;
-            AddEdge(edge, from.Position!, to.Position!, isHighlighted, highlightActive);
+            AddEdge(edge, PositionOf(from), PositionOf(to), isHighlighted, highlightActive);
         }
     }
+
+    private Atlas.Core.Point PositionOf(AppNode node) =>
+        _previewPositions.TryGetValue(node.Id, out var preview) ? preview : node.Position!;
 
     private static string EdgeKey(AppEdge edge) => GraphQueries.EdgeKey(edge);
 

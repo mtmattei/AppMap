@@ -15,6 +15,9 @@ public partial class App : Application
     }
 
     protected Window? MainWindow { get; private set; }
+
+    /// <summary>UI dispatcher for services that must hop to the UI thread (e.g. file pickers).</summary>
+    internal static Microsoft.UI.Dispatching.DispatcherQueue? MainDispatcher { get; private set; }
     protected IHost? Host { get; private set; }
 
     [SuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "Uno.Extensions APIs are used in a way that is safe for trimming in this template context.")]
@@ -66,11 +69,14 @@ public partial class App : Application
                 .ConfigureServices((context, services) =>
                 {
                     services.AddSingleton<IAppModelSource, JsonAppModelSource>();
+                    services.AddSingleton<ILayoutStore, JsonLayoutStore>();
+                    services.AddSingleton<IModelFilePicker, ModelFilePicker>();
                     services.AddSingleton<IRuntimeBridge, RuntimeBridge>();
                 })
                 .UseNavigation(ReactiveViewModelMappings.ViewModelMappings, RegisterRoutes)
             );
         MainWindow = builder.Window;
+        MainDispatcher = MainWindow.DispatcherQueue;
 
         #if DEBUG
         MainWindow.UseStudio();
