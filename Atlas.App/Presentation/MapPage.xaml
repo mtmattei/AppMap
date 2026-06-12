@@ -273,6 +273,21 @@
                     Padding="0"
                     AutomationProperties.Name="Fit map to view" />
           </utu:AutoLayout>
+
+          <!-- Transient notice: confirms Jump / Scope / Open model without stealing input -->
+          <Border HorizontalAlignment="Center"
+                  VerticalAlignment="Bottom"
+                  Margin="0,0,0,20"
+                  Background="{StaticResource AtlasSurface2Brush}"
+                  BorderBrush="{StaticResource AtlasBorder2Brush}"
+                  BorderThickness="1"
+                  CornerRadius="999"
+                  Padding="16,8"
+                  IsHitTestVisible="False"
+                  Visibility="{Binding Notice, Converter={StaticResource StringVisible}}">
+            <TextBlock Text="{Binding Notice}"
+                       Style="{StaticResource AtlasMonoBody}" />
+          </Border>
       </Grid>
 
       <!-- Docked panel -->
@@ -345,7 +360,8 @@
                                     Spacing="10"
                                     Padding="0,4,6,0"
                                     BorderBrush="{StaticResource AtlasBorderBrush}"
-                                    BorderThickness="0,1,0,0">
+                                    BorderThickness="0,1,0,0"
+                                    Loaded="Reveal_Loaded">
                       <TextBlock Text="AGENT"
                                  Margin="0,12,0,0"
                                  Style="{StaticResource AtlasMonoCaption}" />
@@ -504,9 +520,12 @@
                                 Visibility="{Binding ScopedContext, Converter={StaticResource StringVisible}}">
                   <TextBlock Text="SCOPED EDIT CONTEXT" Style="{StaticResource AtlasMonoCaption}" />
                   <Border Background="{StaticResource AtlasSurfaceBrush}" BorderBrush="{StaticResource AtlasLiveDimBrush}" BorderThickness="1" CornerRadius="4" Padding="11">
-                    <TextBlock Text="{Binding ScopedContext}" Style="{StaticResource AtlasMonoMuted}" TextWrapping="Wrap" />
+                    <TextBlock x:Name="ScopedContextText" Text="{Binding ScopedContext}" Style="{StaticResource AtlasMonoMuted}" TextWrapping="Wrap" />
                   </Border>
-                  <Button Content="Clear context" Style="{StaticResource TextButtonStyle}" Command="{Binding ClearScope}" AutomationProperties.Name="Clear scoped edit context" />
+                  <utu:AutoLayout Orientation="Horizontal" Spacing="8">
+                    <Button Content="Copy context" Style="{StaticResource TextButtonStyle}" Click="CopyContext_Click" AutomationProperties.Name="Copy scoped edit context to clipboard" />
+                    <Button Content="Clear context" Style="{StaticResource TextButtonStyle}" Command="{Binding ClearScope}" AutomationProperties.Name="Clear scoped edit context" />
+                  </utu:AutoLayout>
                 </utu:AutoLayout>
               </utu:AutoLayout>
             </ScrollViewer>
@@ -524,6 +543,7 @@
                 </Grid.ColumnDefinitions>
                 <Button Grid.Column="0" Content="Jump to live" HorizontalAlignment="Stretch"
                         Style="{StaticResource OutlinedButtonStyle}" Command="{Binding JumpTo}"
+                        IsEnabled="{Binding RuntimeConnected}"
                         AutomationProperties.Name="Jump to this screen in the running app" />
                 <Button Grid.Column="1" Content="Scope edit" HorizontalAlignment="Stretch"
                         Style="{StaticResource FilledButtonStyle}" Command="{Binding ScopeEdit}"

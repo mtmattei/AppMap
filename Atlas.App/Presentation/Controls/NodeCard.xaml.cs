@@ -21,6 +21,8 @@ public sealed partial class NodeCard : UserControl
     private readonly TranslateTransform _dragTransform = new();
     private bool _pressed;
     private bool _dragging;
+    private bool _hovered;
+    private double _opacityTarget = 1.0;
     private Windows.Foundation.Point _dragStart;
 
     public NodeCard()
@@ -39,6 +41,8 @@ public sealed partial class NodeCard : UserControl
         PointerReleased += OnPointerReleased;
         PointerCaptureLost += (_, _) => ResetDrag();
         PointerCanceled += (_, _) => ResetDrag();
+        PointerEntered += (_, _) => { _hovered = true; UpdateVisualState(); };
+        PointerExited += (_, _) => { _hovered = false; UpdateVisualState(); };
         ProtectedCursor = Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.Hand);
     }
 
@@ -143,15 +147,36 @@ public sealed partial class NodeCard : UserControl
         var highlightActive = highlightedIds is { Count: > 0 };
         var isHighlighted = highlightActive && node is not null && highlightedIds!.Contains(node.Id);
 
-        Opacity = highlightActive && !isHighlighted && !isSelected ? 0.25 : 1.0;
+        AnimateOpacityTo(highlightActive && !isHighlighted && !isSelected ? 0.25 : 1.0);
 
-        // Hard amber ring for selection/highlight; soft amber outline marks the live node at rest.
+        // Hard amber ring for selection/highlight; soft amber outline marks the live node
+        // at rest; hover steps the neutral border up one tone.
         var key = isSelected || isHighlighted
             ? "AtlasLiveBrush"
-            : node?.Status == NodeStatus.Live ? "AtlasLiveDimBrush" : "AtlasBorder2Brush";
+            : node?.Status == NodeStatus.Live ? "AtlasLiveDimBrush"
+            : _hovered ? "AtlasTextMuted2Brush" : "AtlasBorder2Brush";
         if (Application.Current.Resources.TryGetValue(key, out var brush))
         {
             Card.BorderBrush = (Brush)brush;
         }
+    }
+
+    // Dimming a third of the canvas at once reads as a scene change; ease it instead of snapping.
+    private void AnimateOpacityTo(double target)
+    {
+        if (Math.Abs(target - _opacityTarget) < 0.01)
+        {
+            return;
+        }
+
+        _opacityTarget = target;
+        var animation = new Microsoft.UI.Xaml.Media.Animation.DoubleAnimation
+        {
+            To = target,
+            Duration = new Duration(TimeSpan.FromMilliseconds(180)),
+        };
+        Microsoft.UI.Xaml.Media.Animation.Storyboard.SetTarget(animation, this);
+        Microsoft.UI.Xaml.Media.Animation.Storyboard.SetTargetProperty(animation, "Opacity");
+        new Microsoft.UI.Xaml.Media.Animation.Storyboard { Children = { animation } }.Begin();
     }
 }

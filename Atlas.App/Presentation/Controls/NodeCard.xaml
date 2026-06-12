@@ -52,7 +52,8 @@
             <Run Text="/" /><Run Text="{Binding Route}" />
           </TextBlock>
           <TextBlock Text="{Binding ViewModel}"
-                     Style="{StaticResource AtlasMonoType}" />
+                     Style="{StaticResource AtlasMonoType}"
+                     TextTrimming="CharacterEllipsis" />
         </utu:AutoLayout>
       </Grid>
     </utu:CardContentControl>

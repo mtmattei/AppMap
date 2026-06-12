@@ -60,41 +60,75 @@
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="CornerRadius" Value="5" />
     <Setter Property="Padding" Value="12,9" />
+    <Setter Property="UseSystemFocusVisuals" Value="False" />
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="Button">
-          <Border x:Name="Root"
-                  Background="{TemplateBinding Background}"
-                  BorderBrush="{TemplateBinding BorderBrush}"
-                  BorderThickness="{TemplateBinding BorderThickness}"
-                  CornerRadius="{TemplateBinding CornerRadius}"
-                  Padding="{TemplateBinding Padding}">
-            <ContentPresenter HorizontalAlignment="Left"
+          <!-- Hover/press tint is a separate layer so brush changes can fade rather than snap. -->
+          <Grid x:Name="Root">
+            <Border x:Name="Base"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    CornerRadius="{TemplateBinding CornerRadius}" />
+            <Border x:Name="HoverTint"
+                    Background="{StaticResource AtlasSurface2Brush}"
+                    BorderBrush="{StaticResource AtlasBorder2Brush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    CornerRadius="{TemplateBinding CornerRadius}"
+                    Opacity="0" />
+            <Border x:Name="FocusRing"
+                    BorderBrush="{StaticResource AtlasDeclaredBrush}"
+                    BorderThickness="1"
+                    CornerRadius="{TemplateBinding CornerRadius}"
+                    Opacity="0" />
+            <ContentPresenter Padding="{TemplateBinding Padding}"
+                              HorizontalAlignment="Left"
                               VerticalAlignment="Center"
                               Content="{TemplateBinding Content}" />
             <VisualStateManager.VisualStateGroups>
               <VisualStateGroup x:Name="CommonStates">
-                <VisualState x:Name="Normal" />
+                <VisualState x:Name="Normal">
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="HoverTint" Storyboard.TargetProperty="Opacity"
+                                     To="0" Duration="0:0:0.15" />
+                  </Storyboard>
+                </VisualState>
                 <VisualState x:Name="PointerOver">
                   <Storyboard>
-                    <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Root" Storyboard.TargetProperty="Background">
-                      <DiscreteObjectKeyFrame KeyTime="0" Value="{StaticResource AtlasSurface2Brush}" />
-                    </ObjectAnimationUsingKeyFrames>
-                    <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Root" Storyboard.TargetProperty="BorderBrush">
-                      <DiscreteObjectKeyFrame KeyTime="0" Value="{StaticResource AtlasBorder2Brush}" />
-                    </ObjectAnimationUsingKeyFrames>
+                    <DoubleAnimation Storyboard.TargetName="HoverTint" Storyboard.TargetProperty="Opacity"
+                                     To="1" Duration="0:0:0.12" />
                   </Storyboard>
                 </VisualState>
                 <VisualState x:Name="Pressed">
                   <Storyboard>
-                    <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Root" Storyboard.TargetProperty="Background">
-                      <DiscreteObjectKeyFrame KeyTime="0" Value="{StaticResource AtlasSurface2Brush}" />
-                    </ObjectAnimationUsingKeyFrames>
+                    <DoubleAnimation Storyboard.TargetName="HoverTint" Storyboard.TargetProperty="Opacity"
+                                     To="0.55" Duration="0:0:0.05" />
                   </Storyboard>
                 </VisualState>
+                <VisualState x:Name="Disabled">
+                  <VisualState.Setters>
+                    <Setter Target="Root.Opacity" Value="0.45" />
+                  </VisualState.Setters>
+                </VisualState>
+              </VisualStateGroup>
+              <VisualStateGroup x:Name="FocusStates">
+                <VisualState x:Name="Focused">
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="FocusRing" Storyboard.TargetProperty="Opacity"
+                                     To="1" Duration="0:0:0.1" />
+                  </Storyboard>
+                </VisualState>
+                <VisualState x:Name="Unfocused">
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="FocusRing" Storyboard.TargetProperty="Opacity"
+                                     To="0" Duration="0:0:0.1" />
+                  </Storyboard>
+                </VisualState>
+                <VisualState x:Name="PointerFocused" />
               </VisualStateGroup>
             </VisualStateManager.VisualStateGroups>
-          </Border>
+          </Grid>
         </ControlTemplate>
       </Setter.Value>
     </Setter>

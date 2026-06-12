@@ -50,6 +50,41 @@ public sealed partial class MapPage : Page
     private void ZoomBy(double factor) =>
         MapZoom.ZoomLevel = Math.Clamp(MapZoom.ZoomLevel * factor, MapZoom.MinZoomLevel, MapZoom.MaxZoomLevel);
 
+    // Entrance fade for blocks that materialize from a feed (agent result, scoped context).
+    private void Reveal_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is not UIElement element)
+        {
+            return;
+        }
+
+        var animation = new Microsoft.UI.Xaml.Media.Animation.DoubleAnimation
+        {
+            From = 0,
+            To = 1,
+            Duration = new Duration(TimeSpan.FromMilliseconds(250)),
+        };
+        Microsoft.UI.Xaml.Media.Animation.Storyboard.SetTarget(animation, element);
+        Microsoft.UI.Xaml.Media.Animation.Storyboard.SetTargetProperty(animation, "Opacity");
+        new Microsoft.UI.Xaml.Media.Animation.Storyboard { Children = { animation } }.Begin();
+    }
+
+    // View-level clipboard hand-off; Click keeps it on the UI thread, which Clipboard requires.
+    private async void CopyContext_Click(object sender, RoutedEventArgs e)
+    {
+        var package = new Windows.ApplicationModel.DataTransfer.DataPackage();
+        package.SetText(ScopedContextText.Text);
+        Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(package);
+
+        if (sender is Button button)
+        {
+            var original = button.Content;
+            button.Content = "Copied ✓";
+            await Task.Delay(1400);
+            button.Content = original;
+        }
+    }
+
     // ----- left-drag panning on the canvas background -----
     // Node cards, buttons, and toggles capture their own pointers, so any drag
     // still reaching the host grid is a pan gesture.

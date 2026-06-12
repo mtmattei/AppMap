@@ -44,27 +44,53 @@ public sealed partial class InspectorSection : ContentControl
         base.OnApplyTemplate();
         _caret = GetTemplateChild("PART_Caret") as FrameworkElement;
         _body = GetTemplateChild("PART_Body") as UIElement;
-        if (GetTemplateChild("PART_Header") is UIElement header)
+        if (GetTemplateChild("PART_Header") is Microsoft.UI.Xaml.Controls.Grid header)
         {
             header.Tapped += (_, _) => IsOpen = !IsOpen;
+            header.PointerEntered += (_, _) => SetHeaderHover(header, hovered: true);
+            header.PointerExited += (_, _) => SetHeaderHover(header, hovered: false);
         }
 
-        Apply();
+        Apply(animate: false);
+    }
+
+    private static void SetHeaderHover(Microsoft.UI.Xaml.Controls.Grid header, bool hovered)
+    {
+        header.Background = hovered && Application.Current.Resources.TryGetValue("AtlasSurfaceBrush", out var brush)
+            ? (Brush)brush
+            : new SolidColorBrush(Microsoft.UI.Colors.Transparent);
     }
 
     private static void OnIsOpenChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) =>
-        ((InspectorSection)d).Apply();
+        ((InspectorSection)d).Apply(animate: true);
 
-    private void Apply()
+    private void Apply(bool animate)
     {
         if (_body is not null)
         {
             _body.Visibility = IsOpen ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        if (_caret?.RenderTransform is RotateTransform rotate)
+        if (_caret?.RenderTransform is not RotateTransform rotate)
         {
-            rotate.Angle = IsOpen ? 90 : 0;
+            return;
         }
+
+        var target = IsOpen ? 90 : 0;
+        if (!animate)
+        {
+            rotate.Angle = target;
+            return;
+        }
+
+        var animation = new Microsoft.UI.Xaml.Media.Animation.DoubleAnimation
+        {
+            To = target,
+            Duration = new Duration(TimeSpan.FromMilliseconds(140)),
+            EnableDependentAnimation = true,
+        };
+        Microsoft.UI.Xaml.Media.Animation.Storyboard.SetTarget(animation, rotate);
+        Microsoft.UI.Xaml.Media.Animation.Storyboard.SetTargetProperty(animation, "Angle");
+        new Microsoft.UI.Xaml.Media.Animation.Storyboard { Children = { animation } }.Begin();
     }
 }

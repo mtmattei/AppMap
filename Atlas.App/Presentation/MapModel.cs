@@ -39,11 +39,33 @@ public partial record MapModel(IRuntimeBridge Bridge, IModelFilePicker Picker, I
 
     public IState<string> ScopedContext => State<string>.Empty(this);
 
+    // Transient status line (SPEC: toast on Jump/Scope, same verb as the button).
+    public IState<string> Notice => State<string>.Empty(this);
+
+    private CancellationTokenSource? _noticeCts;
+
+    private async ValueTask ShowNotice(string message, CancellationToken ct)
+    {
+        _noticeCts?.Cancel();
+        var cts = _noticeCts = new CancellationTokenSource();
+        await Notice.SetAsync(message, ct);
+        try
+        {
+            await Task.Delay(2500, cts.Token);
+            await Notice.SetAsync(null!, CancellationToken.None);
+        }
+        catch (OperationCanceledException)
+        {
+            // A newer notice took over.
+        }
+    }
+
     public async ValueTask JumpTo(CancellationToken ct)
     {
         if (await Selected is { } node)
         {
             Bridge.RequestNavigate(node.Route);
+            await ShowNotice($"Navigated → {node.Name}", ct);
         }
     }
 
@@ -54,6 +76,7 @@ public partial record MapModel(IRuntimeBridge Bridge, IModelFilePicker Picker, I
         if (node is not null && model is not null)
         {
             await ScopedContext.SetAsync(EditScope.For(model, node.Id).ToPromptContext(), ct);
+            await ShowNotice("Scoped edit context ready", ct);
         }
     }
 
@@ -70,11 +93,14 @@ public partial record MapModel(IRuntimeBridge Bridge, IModelFilePicker Picker, I
 
         try
         {
-            Bridge.OpenModel(AppModelJson.Deserialize(json));
+            var model = AppModelJson.Deserialize(json);
+            Bridge.OpenModel(model);
+            await ShowNotice($"Model loaded → {model.App}", ct);
         }
         catch (System.Text.Json.JsonException ex)
         {
             Logger.LogWarning(ex, "The picked file is not a valid app model.");
+            await ShowNotice("Not a valid app model file", ct);
         }
     }
 
