@@ -10,7 +10,7 @@ namespace Atlas.App.Services;
 /// The static model is the starting point; every agent route event produces a
 /// new merged snapshot pushed to all subscribers.
 /// </summary>
-public sealed class RuntimeBridge(IAppModelSource modelSource, ILayoutStore layoutStore) : IRuntimeBridge, IDisposable
+public sealed class RuntimeBridge(IAppModelSource modelSource, ILayoutStore layoutStore, StartupOptions startup, IRecentModels recent) : IRuntimeBridge, IDisposable
 {
     private readonly object _gate = new();
     private readonly List<Channel<AppModel>> _modelSubscribers = [];
@@ -85,7 +85,7 @@ public sealed class RuntimeBridge(IAppModelSource modelSource, ILayoutStore layo
             }
         }
 
-        var model = ApplyStoredLayout(await modelSource.LoadAsync(ct));
+        var model = ApplyStoredLayout(await LoadInitialAsync(ct));
         lock (_gate)
         {
             if (_current is null)
@@ -107,6 +107,26 @@ public sealed class RuntimeBridge(IAppModelSource modelSource, ILayoutStore layo
 
             return _current;
         }
+    }
+
+    // A launch-arg / file-association path wins over the embedded sample; a bad path falls back.
+    private async ValueTask<AppModel> LoadInitialAsync(CancellationToken ct)
+    {
+        if (startup.ModelPath is { Length: > 0 } path && File.Exists(path))
+        {
+            try
+            {
+                var model = AppModelJson.Deserialize(await File.ReadAllTextAsync(path, ct));
+                recent.Add(path);
+                return model;
+            }
+            catch (Exception)
+            {
+                // Unreadable or invalid launch model — fall back to the embedded sample.
+            }
+        }
+
+        return await modelSource.LoadAsync(ct);
     }
 
     /// <summary>Replaces the current model (e.g. a model file opened by the user).</summary>
