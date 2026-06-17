@@ -16,4 +16,8 @@ public sealed record Suggestion(
     QueryId Query,        // dispatch target
     string? Arg,          // target node id for PathsTo/TraceLive; else null
     int? Count,           // pre-counted result size; null = explorer (not pre-run)
-    SuggestionKind Kind);
+    SuggestionKind Kind)
+{
+    /// <summary>Screen-reader text: verb + label, with the count appended when one is pre-run.</summary>
+    public string Spoken => Count is { } c ? $"{Verb} {Label}, {c} found" : $"{Verb} {Label}";
+}

@@ -17,6 +17,7 @@
     <local:NodeJsonConverter x:Key="NodeJson" />
     <local:IndexVisibleConverter x:Key="IndexVisible" />
     <local:StringVisibleConverter x:Key="StringVisible" />
+    <local:NotNullVisibleConverter x:Key="NotNullVisible" />
     <local:BoolToBrushConverter x:Key="ConnectedDot"
                                 TrueBrush="{StaticResource AtlasObservedBrush}"
                                 FalseBrush="{StaticResource AtlasTextMuted2Brush}" />
@@ -326,44 +327,53 @@
             <utu:AutoLayout Orientation="Vertical"
                             Spacing="16"
                             Padding="16,18">
-              <TextBlock Text="The agent reads the same graph you see. Ask about the structure of RoundsApp, or point it at a screen to scope an edit."
+              <TextBlock Text="{Binding AgentIntro}"
                          Style="{StaticResource AtlasUiProse}"
                          Foreground="{StaticResource AtlasTextMutedBrush}" />
-              <utu:AutoLayout Orientation="Vertical"
-                              Spacing="6">
-                <Button Style="{StaticResource AtlasQueryButtonStyle}"
-                        Command="{Binding FindOrphans}"
-                        AutomationProperties.Name="Find orphaned screens">
-                  <utu:AutoLayout Orientation="Horizontal" Spacing="10" CounterAxisAlignment="Center">
-                    <TextBlock Text="FIND" Style="{StaticResource AtlasMonoCaption}" Foreground="{StaticResource AtlasLiveBrush}" />
-                    <TextBlock Text="Orphaned screens" Style="{StaticResource AtlasUiBody}" />
-                  </utu:AutoLayout>
-                </Button>
-                <Button Style="{StaticResource AtlasQueryButtonStyle}"
-                        Command="{Binding FindPaths}"
-                        AutomationProperties.Name="Show every path to MedAdministration">
-                  <utu:AutoLayout Orientation="Horizontal" Spacing="10" CounterAxisAlignment="Center">
-                    <TextBlock Text="SHOW" Style="{StaticResource AtlasMonoCaption}" Foreground="{StaticResource AtlasLiveBrush}" />
-                    <TextBlock Text="Every path to MedAdministration" Style="{StaticResource AtlasUiBody}" />
-                  </utu:AutoLayout>
-                </Button>
-                <Button Style="{StaticResource AtlasQueryButtonStyle}"
-                        Command="{Binding FindDuplicates}"
-                        AutomationProperties.Name="Detect duplicated screens">
-                  <utu:AutoLayout Orientation="Horizontal" Spacing="10" CounterAxisAlignment="Center">
-                    <TextBlock Text="DETECT" Style="{StaticResource AtlasMonoCaption}" Foreground="{StaticResource AtlasLiveBrush}" />
-                    <TextBlock Text="Duplicated screens" Style="{StaticResource AtlasUiBody}" />
-                  </utu:AutoLayout>
-                </Button>
-                <Button Style="{StaticResource AtlasQueryButtonStyle}"
-                        Command="{Binding FindUnreachable}"
-                        AutomationProperties.Name="Find unreachable routes">
-                  <utu:AutoLayout Orientation="Horizontal" Spacing="10" CounterAxisAlignment="Center">
-                    <TextBlock Text="FIND" Style="{StaticResource AtlasMonoCaption}" Foreground="{StaticResource AtlasLiveBrush}" />
-                    <TextBlock Text="Unreachable routes" Style="{StaticResource AtlasUiBody}" />
-                  </utu:AutoLayout>
-                </Button>
-              </utu:AutoLayout>
+              <!-- Chips are a projection of the loaded model (SuggestionEngine). The bound
+                   Suggestion reaches RunSuggestion through utu:CommandExtensions.Command on the
+                   repeater — same item-as-parameter pattern proven by SelectNode on the canvas. -->
+              <mvux:FeedView Source="{Binding Suggestions}">
+                <mvux:FeedView.ValueTemplate>
+                  <DataTemplate>
+                    <ItemsRepeater ItemsSource="{Binding Data}"
+                                   utu:CommandExtensions.Command="{Binding Parent.RunSuggestion}">
+                      <ItemsRepeater.Layout>
+                        <StackLayout Orientation="Vertical" Spacing="6" />
+                      </ItemsRepeater.Layout>
+                      <ItemsRepeater.ItemTemplate>
+                        <DataTemplate>
+                          <Button Style="{StaticResource AtlasQueryButtonStyle}"
+                                  AutomationProperties.Name="{Binding Spoken}">
+                            <utu:AutoLayout Orientation="Horizontal" Justify="SpaceBetween" CounterAxisAlignment="Center">
+                              <utu:AutoLayout Orientation="Horizontal" Spacing="10" CounterAxisAlignment="Center">
+                                <TextBlock Text="{Binding Verb}" Style="{StaticResource AtlasMonoCaption}" Foreground="{StaticResource AtlasLiveBrush}" />
+                                <TextBlock Text="{Binding Label}" Style="{StaticResource AtlasUiBody}" />
+                              </utu:AutoLayout>
+                              <!-- Count badge: shown only for pre-run smell chips (Count != null) -->
+                              <Border CornerRadius="999"
+                                      BorderBrush="{StaticResource AtlasBorder2Brush}"
+                                      BorderThickness="1"
+                                      Padding="7,2"
+                                      Visibility="{Binding Count, Converter={StaticResource NotNullVisible}}">
+                                <TextBlock Text="{Binding Count}"
+                                           Style="{StaticResource AtlasMonoCaption}"
+                                           Foreground="{StaticResource AtlasTextMutedBrush}" />
+                              </Border>
+                            </utu:AutoLayout>
+                          </Button>
+                        </DataTemplate>
+                      </ItemsRepeater.ItemTemplate>
+                    </ItemsRepeater>
+                  </DataTemplate>
+                </mvux:FeedView.ValueTemplate>
+                <mvux:FeedView.NoneTemplate>
+                  <DataTemplate>
+                    <TextBlock Text="No structural suggestions for this model."
+                               Style="{StaticResource AtlasUiMuted}" />
+                  </DataTemplate>
+                </mvux:FeedView.NoneTemplate>
+              </mvux:FeedView>
               <mvux:FeedView Source="{Binding AgentResult}">
                 <mvux:FeedView.ValueTemplate>
                   <DataTemplate>

@@ -43,6 +43,16 @@ public sealed partial class StringVisibleConverter : IValueConverter
         throw new NotSupportedException();
 }
 
+/// <summary>Visible when the bound value is non-null; collapsed otherwise — gates the count badge.</summary>
+public sealed partial class NotNullVisibleConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object parameter, string language) =>
+        value is null ? Visibility.Collapsed : Visibility.Visible;
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language) =>
+        throw new NotSupportedException();
+}
+
 /// <summary>Maps a bool to one of two brushes assigned from theme resources in XAML.</summary>
 public sealed partial class BoolToBrushConverter : IValueConverter
 {

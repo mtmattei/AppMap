@@ -20,6 +20,14 @@ public partial record MapModel(IRuntimeBridge Bridge, IModelFilePicker Picker, I
     public IState<bool> ShowObserved => State.Value(this, () => true);
     public IState<bool> ShowUnreachable => State.Value(this, () => true);
 
+    // Suggestion chips are a projection of the loaded model: recomputed on every Graph snapshot,
+    // so they track Open-model and live route edges flipping declared→observed for free.
+    public IFeed<IReadOnlyList<Suggestion>> Suggestions => Graph.Select(SuggestionEngine.For);
+
+    // Intro prose names the app in front of the panel instead of a hardcoded "RoundsApp".
+    public IFeed<string> AgentIntro => Graph.Select(m =>
+        $"The agent reads the same graph you see. Ask about the structure of {m.App}, or point it at a screen to scope an edit.");
+
     public IState<QueryResult> AgentResult => State<QueryResult>.Empty(this);
 
     // 0 = Agent, 1 = Inspector. Selecting a node brings the inspector forward.
@@ -104,18 +112,19 @@ public partial record MapModel(IRuntimeBridge Bridge, IModelFilePicker Picker, I
         }
     }
 
-    public async ValueTask FindOrphans(CancellationToken ct) =>
-        await RunQuery(GraphQueries.FindOrphans, ct);
-
-    // v1 chip targets the fixture's high-risk flow, mirroring the prototype's query.
-    public async ValueTask FindPaths(CancellationToken ct) =>
-        await RunQuery(m => GraphQueries.FindPathsTo(m, "meds"), ct);
-
-    public async ValueTask FindDuplicates(CancellationToken ct) =>
-        await RunQuery(GraphQueries.FindDuplicates, ct);
-
-    public async ValueTask FindUnreachable(CancellationToken ct) =>
-        await RunQuery(GraphQueries.FindUnreachable, ct);
+    // Single dispatch for every chip. The bound Suggestion arrives as the CommandParameter via
+    // utu:CommandExtensions.Command (the validated SelectNode pattern); PathsTo/TraceLive carry
+    // the target node id in Arg, so no node id is ever hardcoded here.
+    public async ValueTask RunSuggestion(Suggestion suggestion, CancellationToken ct) =>
+        await RunQuery(m => suggestion.Query switch
+        {
+            QueryId.Orphans => GraphQueries.FindOrphans(m),
+            QueryId.Duplicates => GraphQueries.FindDuplicates(m),
+            QueryId.Unreachable => GraphQueries.FindUnreachable(m),
+            QueryId.PathsTo => GraphQueries.FindPathsTo(m, suggestion.Arg!),
+            QueryId.TraceLive => GraphQueries.FindPathsTo(m, suggestion.Arg!),
+            _ => GraphQueries.FindOrphans(m),
+        }, ct);
 
     public async ValueTask ClearHighlights(CancellationToken ct) =>
         await AgentResult.UpdateAsync(_ => null, ct);
