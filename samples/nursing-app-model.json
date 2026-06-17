@@ -1,0 +1,27 @@
+{
+  "app": "NursingScheduleApp",
+  "generatedAt": "2026-06-16T00:00:00Z",
+  "source": "static",
+  "schemaVersion": "1.0",
+  "nodes": [
+    { "id": "main", "name": "Main", "kind": "shell", "route": "Main", "view": "MainPage", "viewModel": "MainModel", "status": "normal",
+      "files": ["Presentation/MainPage.xaml", "Presentation/MainModel.cs"], "elements": ["NavigationView NavView", "Grid ContentRegion (Visibility navigator)"], "tokens": ["BackgroundBrush"], "position": { "x": 120, "y": 320 } },
+    { "id": "dashboard", "name": "Dashboard", "kind": "page", "route": "Main/Dashboard", "view": "DashboardPage", "viewModel": "DashboardModel", "status": "normal",
+      "files": ["Presentation/DashboardPage.xaml", "Presentation/DashboardModel.cs"], "elements": ["ItemsRepeater DepartmentRows", "ItemsRepeater CoverageGaps"], "tokens": ["BackgroundBrush", "OnBackgroundBrush", "OnSurfaceVariantBrush"], "position": { "x": 480, "y": 80 } },
+    { "id": "shiftplanning", "name": "ShiftPlanning", "kind": "page", "route": "Main/ShiftPlanning", "view": "ShiftPlanningPage", "viewModel": "ShiftPlanningModel", "status": "normal",
+      "files": ["Presentation/ShiftPlanningPage.xaml", "Presentation/ShiftPlanningModel.cs"], "elements": ["ItemsRepeater WeeklyRows"], "tokens": ["BackgroundBrush", "OnSurfaceVariantBrush"], "position": { "x": 480, "y": 232 } },
+    { "id": "staffdirectory", "name": "StaffDirectory", "kind": "page", "route": "Main/StaffDirectory", "view": "StaffDirectoryPage", "viewModel": "StaffDirectoryModel", "status": "normal",
+      "files": ["Presentation/StaffDirectoryPage.xaml", "Presentation/StaffDirectoryModel.cs"], "elements": ["ItemsRepeater Nurses"], "tokens": ["BackgroundBrush", "OnBackgroundBrush"], "position": { "x": 480, "y": 384 } },
+    { "id": "requests", "name": "Requests", "kind": "page", "route": "Main/Requests", "view": "RequestsPage", "viewModel": "RequestsModel", "status": "normal",
+      "files": ["Presentation/RequestsPage.xaml", "Presentation/RequestsModel.cs"], "elements": ["ItemsRepeater PendingRequests", "ItemsRepeater RecentlyResolved"], "tokens": ["BackgroundBrush", "ErrorContainerBrush", "OnErrorContainerBrush"], "position": { "x": 480, "y": 536 } },
+    { "id": "workload", "name": "Workload", "kind": "page", "route": "Main/Workload", "view": "WorkloadPage", "viewModel": "WorkloadModel", "status": "normal",
+      "files": ["Presentation/WorkloadPage.xaml", "Presentation/WorkloadModel.cs"], "elements": ["ItemsRepeater NurseWorkloads"], "tokens": ["BackgroundBrush", "OnSurfaceVariantBrush"], "position": { "x": 480, "y": 688 } }
+  ],
+  "edges": [
+    { "from": "main", "to": "dashboard", "kind": "declared", "trigger": "NavView:Dashboard", "isDefault": true },
+    { "from": "main", "to": "shiftplanning", "kind": "declared", "trigger": "NavView:ShiftPlanning" },
+    { "from": "main", "to": "staffdirectory", "kind": "declared", "trigger": "NavView:StaffDirectory" },
+    { "from": "main", "to": "requests", "kind": "declared", "trigger": "NavView:Requests" },
+    { "from": "main", "to": "workload", "kind": "declared", "trigger": "NavView:Workload" }
+  ]
+}
