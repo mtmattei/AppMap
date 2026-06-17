@@ -22,7 +22,9 @@ public partial record MapModel(IRuntimeBridge Bridge, IModelFilePicker Picker, I
 
     // Suggestion chips are a projection of the loaded model: recomputed on every Graph snapshot,
     // so they track Open-model and live route edges flipping declared→observed for free.
-    public IFeed<IReadOnlyList<Suggestion>> Suggestions => Graph.Select(SuggestionEngine.For);
+    // IListFeed (not IFeed<collection>) so FeedView renders the list and shows NoneTemplate when empty.
+    public IListFeed<Suggestion> Suggestions =>
+        Graph.Select(m => (IImmutableList<Suggestion>)SuggestionEngine.For(m).ToImmutableList()).AsListFeed();
 
     // Intro prose names the app in front of the panel instead of a hardcoded "RoundsApp".
     public IFeed<string> AgentIntro => Graph.Select(m =>
