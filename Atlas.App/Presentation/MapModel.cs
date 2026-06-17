@@ -2,7 +2,7 @@ using Atlas.Core;
 
 namespace Atlas.App.Presentation;
 
-public partial record MapModel(IRuntimeBridge Bridge, IModelFilePicker Picker, ILogger<MapModel> Logger)
+public partial record MapModel(IRuntimeBridge Bridge, IModelFilePicker Picker, IRecentModels Recent, ILogger<MapModel> Logger)
 {
     // Named Graph because the MVUX generator reserves 'Model' on the generated ViewModel.
     // Starts as the static model; every observed route from a connected agent re-emits.
@@ -95,21 +95,47 @@ public partial record MapModel(IRuntimeBridge Bridge, IModelFilePicker Picker, I
 
     public async ValueTask OpenModel(CancellationToken ct)
     {
-        var json = await Picker.PickModelJsonAsync(ct);
-        if (json is null)
+        var picked = await Picker.PickModelAsync(ct);
+        if (picked is not null)
         {
+            await LoadModel(picked.Json, picked.Path, ct);
+        }
+    }
+
+    // Funnel for path-based loads: drag-drop, recent-pick, launch-arg. Reads the file, then loads.
+    public async ValueTask LoadModelFromPath(string path, CancellationToken ct)
+    {
+        string json;
+        try
+        {
+            json = await File.ReadAllTextAsync(path, ct);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            Logger.LogWarning(ex, "Could not read model file {Path}.", path);
+            await ShowNotice("Could not read that file", ct);
             return;
         }
 
+        await LoadModel(json, path, ct);
+    }
+
+    // Shared load: deserialize, push to the bridge, remember the path, toast. Every load funnels here.
+    private async ValueTask LoadModel(string json, string? path, CancellationToken ct)
+    {
         try
         {
             var model = AppModelJson.Deserialize(json);
             Bridge.OpenModel(model);
+            if (path is { Length: > 0 })
+            {
+                Recent.Add(path);
+            }
             await ShowNotice($"Model loaded → {model.App}", ct);
         }
         catch (System.Text.Json.JsonException ex)
         {
-            Logger.LogWarning(ex, "The picked file is not a valid app model.");
+            Logger.LogWarning(ex, "The file is not a valid app model.");
             await ShowNotice("Not a valid app model file", ct);
         }
     }

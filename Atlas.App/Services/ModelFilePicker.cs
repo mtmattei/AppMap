@@ -7,12 +7,12 @@ namespace Atlas.App.Services;
 /// MVUX commands may execute off it.</summary>
 public sealed class ModelFilePicker : IModelFilePicker
 {
-    public async Task<string?> PickModelJsonAsync(CancellationToken ct)
+    public async Task<PickedModel?> PickModelAsync(CancellationToken ct)
     {
         var dispatcher = App.MainDispatcher
             ?? throw new InvalidOperationException("Dispatcher not available before the window exists.");
 
-        var completion = new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var completion = new TaskCompletionSource<PickedModel?>(TaskCreationOptions.RunContinuationsAsynchronously);
         dispatcher.TryEnqueue(async () =>
         {
             try
@@ -24,7 +24,10 @@ public sealed class ModelFilePicker : IModelFilePicker
                 picker.FileTypeFilter.Add(".json");
 
                 var file = await picker.PickSingleFileAsync();
-                completion.TrySetResult(file is null ? null : await FileIO.ReadTextAsync(file));
+                // Read text here (works on every platform); carry the path so loads can be remembered.
+                completion.TrySetResult(file is null
+                    ? null
+                    : new PickedModel(file.Path, await FileIO.ReadTextAsync(file)));
             }
             catch (Exception ex)
             {
