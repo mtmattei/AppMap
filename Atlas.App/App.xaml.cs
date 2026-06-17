@@ -70,6 +70,7 @@ public partial class App : Application
                 {
                     services.AddSingleton<IAppModelSource, JsonAppModelSource>();
                     services.AddSingleton<ILayoutStore, JsonLayoutStore>();
+                    services.AddSingleton<IRecentModels>(_ => new JsonRecentModels());
                     services.AddSingleton<IModelFilePicker, ModelFilePicker>();
                     services.AddSingleton<IRuntimeBridge, RuntimeBridge>();
                 })
