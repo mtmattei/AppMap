@@ -93,6 +93,9 @@ public partial record MapModel(IRuntimeBridge Bridge, IModelFilePicker Picker, I
     public async ValueTask ClearScope(CancellationToken ct) =>
         await ScopedContext.SetAsync(null!, ct);
 
+    // Read on demand when the recent flyout opens (code-behind reaches this via the VM's Model).
+    public IReadOnlyList<string> RecentModelPaths => Recent.All();
+
     public async ValueTask OpenModel(CancellationToken ct)
     {
         var picked = await Picker.PickModelAsync(ct);

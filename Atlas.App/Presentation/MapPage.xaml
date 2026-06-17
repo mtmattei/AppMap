@@ -101,6 +101,16 @@
                      Style="{StaticResource AtlasMonoCaption}"
                      Foreground="{StaticResource AtlasTextBrush}" />
         </Border>
+        <Button x:Name="RecentButton"
+                Content="▾"
+                Padding="6,2"
+                Style="{StaticResource TextButtonStyle}"
+                AutomationProperties.Name="Open a recent model">
+          <Button.Flyout>
+            <MenuFlyout x:Name="RecentFlyout"
+                        Opening="RecentFlyout_Opening" />
+          </Button.Flyout>
+        </Button>
         <Border CornerRadius="999"
                 Padding="11,5"
                 BorderBrush="{StaticResource AtlasBorderBrush}"

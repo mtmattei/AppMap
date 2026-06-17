@@ -369,4 +369,34 @@ public sealed partial class MapPage : Page
         DropOverlay.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
         DropOverlay.Opacity = show ? 1 : 0;
     }
+
+    // ----- recent models flyout: built fresh on open from the VM's recent list -----
+
+    private void RecentFlyout_Opening(object? sender, object e)
+    {
+        RecentFlyout.Items.Clear();
+
+        var vm = DataContext as MapViewModel;
+        var paths = vm?.Model.RecentModelPaths ?? Array.Empty<string>();
+
+        if (paths.Count == 0)
+        {
+            RecentFlyout.Items.Add(new MenuFlyoutItem { Text = "No recent models", IsEnabled = false });
+            return;
+        }
+
+        foreach (var path in paths)
+        {
+            var item = new MenuFlyoutItem { Text = Path.GetFileName(path) };
+            ToolTipService.SetToolTip(item, path);
+            item.Click += (_, _) =>
+            {
+                if (vm?.LoadModelFromPath is { } command && command.CanExecute(path))
+                {
+                    command.Execute(path);
+                }
+            };
+            RecentFlyout.Items.Add(item);
+        }
+    }
 }
