@@ -129,6 +129,10 @@
 
       <Grid x:Name="CanvasHost"
             Background="{StaticResource AtlasCanvasBrush}"
+            AllowDrop="True"
+            DragOver="CanvasHost_DragOver"
+            Drop="CanvasHost_Drop"
+            DragLeave="CanvasHost_DragLeave"
             PointerPressed="CanvasHost_PointerPressed"
             PointerMoved="CanvasHost_PointerMoved"
             PointerReleased="CanvasHost_PointerReleased"
@@ -300,6 +304,26 @@
             <TextBlock Text="{Binding Notice}"
                        Style="{StaticResource AtlasMonoBody}" />
           </Border>
+
+          <!-- Drop affordance: dashed outline + prompt while a file is dragged over the canvas.
+               Hit-test-invisible so the drop reaches CanvasHost; toggled from code-behind. -->
+          <Grid x:Name="DropOverlay"
+                Visibility="Collapsed"
+                Opacity="0"
+                IsHitTestVisible="False">
+            <Rectangle Margin="16"
+                       RadiusX="12"
+                       RadiusY="12"
+                       Stroke="{StaticResource AtlasDeclaredBrush}"
+                       StrokeThickness="2"
+                       StrokeDashArray="6,4"
+                       Fill="{StaticResource AtlasPanelBrush}"
+                       Opacity="0.85" />
+            <TextBlock Text="Drop an app-model .json"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       Style="{StaticResource AtlasMonoBody}" />
+          </Grid>
       </Grid>
 
       <!-- Docked panel -->

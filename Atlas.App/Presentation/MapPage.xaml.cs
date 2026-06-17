@@ -1,4 +1,6 @@
 using Microsoft.UI.Xaml.Input;
+using Windows.ApplicationModel.DataTransfer;
+using Windows.Storage;
 
 namespace Atlas.App.Presentation;
 
@@ -325,5 +327,46 @@ public sealed partial class MapPage : Page
         MapZoom.HorizontalScrollValue = (MapZoom.ActualWidth / 2 - (position.X + card.ActualWidth / 2) * zoom) * k.X;
         MapZoom.VerticalScrollValue = (MapZoom.ActualHeight / 2 - (position.Y + card.ActualHeight / 2) * zoom) * k.Y;
         e.Handled = true;
+    }
+
+    // ----- drag-drop: open a model by dropping its .json on the canvas -----
+    // The drop reaches CanvasHost (AllowDrop); we invoke the VM's LoadModelFromPath command
+    // directly — the documented way to run a parameterized MVUX command from code-behind.
+
+    private void CanvasHost_DragOver(object sender, DragEventArgs e)
+    {
+        if (e.DataView.Contains(StandardDataFormats.StorageItems))
+        {
+            e.AcceptedOperation = DataPackageOperation.Copy;
+            ShowDropOverlay(true);
+        }
+    }
+
+    private void CanvasHost_DragLeave(object sender, DragEventArgs e) => ShowDropOverlay(false);
+
+    private async void CanvasHost_Drop(object sender, DragEventArgs e)
+    {
+        ShowDropOverlay(false);
+
+        if (!e.DataView.Contains(StandardDataFormats.StorageItems))
+        {
+            return;
+        }
+
+        var items = await e.DataView.GetStorageItemsAsync();
+        var file = items.OfType<StorageFile>()
+            .FirstOrDefault(f => string.Equals(f.FileType, ".json", StringComparison.OrdinalIgnoreCase));
+
+        if (file is { Path.Length: > 0 } && DataContext is MapViewModel vm
+            && vm.LoadModelFromPath is { } command && command.CanExecute(file.Path))
+        {
+            command.Execute(file.Path);
+        }
+    }
+
+    private void ShowDropOverlay(bool show)
+    {
+        DropOverlay.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        DropOverlay.Opacity = show ? 1 : 0;
     }
 }
