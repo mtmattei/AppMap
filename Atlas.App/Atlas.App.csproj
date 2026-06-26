@@ -6,6 +6,16 @@
   <ItemGroup>
     <EmbeddedResource Include="..\samples\rounds-app-model.json" Link="Fixtures\rounds-app-model.json" LogicalName="Atlas.App.Fixtures.rounds-app-model.json" />
   </ItemGroup>
+
+  <!-- Claude agent Q&A is a desktop concern: the Anthropic SDK isn't needed on WASM, where
+       direct api.anthropic.com calls are CORS-blocked anyway. ATLAS_CLAUDE guards the SDK-using
+       code so the WASM head stays dependency-clean. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-desktop'">
+    <PackageReference Include="Anthropic" />
+  </ItemGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-desktop'">
+    <DefineConstants>$(DefineConstants);ATLAS_CLAUDE</DefineConstants>
+  </PropertyGroup>
   <PropertyGroup>
     <TargetFrameworks>net10.0-browserwasm;net10.0-desktop</TargetFrameworks>
 

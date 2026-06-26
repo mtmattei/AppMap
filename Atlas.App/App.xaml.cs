@@ -78,6 +78,7 @@ public partial class App : Application
                     services.AddSingleton(new StartupOptions(StartupModelPath));
                     services.AddSingleton<IModelFilePicker, ModelFilePicker>();
                     services.AddSingleton<IRuntimeBridge, RuntimeBridge>();
+                    RegisterAgentQuery(services);
                 })
                 .UseNavigation(ReactiveViewModelMappings.ViewModelMappings, RegisterRoutes)
             );
@@ -90,6 +91,19 @@ public partial class App : Application
                 MainWindow.SetWindowIcon();
 
         Host = await builder.NavigateAsync<Shell>();
+    }
+
+    // Claude answers when an API key is present (desktop build only); otherwise the local interpreter does.
+    private static void RegisterAgentQuery(IServiceCollection services)
+    {
+#if ATLAS_CLAUDE
+        if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY")))
+        {
+            services.AddSingleton<IAgentQuery, ClaudeAgentQuery>();
+            return;
+        }
+#endif
+        services.AddSingleton<IAgentQuery, LocalAgentQuery>();
     }
 
     private static void RegisterRoutes(IViewRegistry views, IRouteRegistry routes)

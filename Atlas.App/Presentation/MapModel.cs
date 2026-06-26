@@ -2,7 +2,7 @@ using Atlas.Core;
 
 namespace Atlas.App.Presentation;
 
-public partial record MapModel(IRuntimeBridge Bridge, IModelFilePicker Picker, IRecentModels Recent, ILogger<MapModel> Logger)
+public partial record MapModel(IRuntimeBridge Bridge, IModelFilePicker Picker, IRecentModels Recent, IAgentQuery Agent, ILogger<MapModel> Logger)
 {
     // Named Graph because the MVUX generator reserves 'Model' on the generated ViewModel.
     // Starts as the static model; every observed route from a connected agent re-emits.
@@ -35,14 +35,15 @@ public partial record MapModel(IRuntimeBridge Bridge, IModelFilePicker Picker, I
     // The free-text agent question; two-way bound to the input box.
     public IState<string> Question => State<string>.Empty(this);
 
-    // Answers a typed question by routing it through the local interpreter over the loaded graph.
+    // Answers a typed question via the agent (Claude when configured, else the local interpreter).
     public async ValueTask AskQuestion(CancellationToken ct)
     {
         var question = await Question;
         var model = await Graph;
         if (!string.IsNullOrWhiteSpace(question) && model is not null)
         {
-            await AgentResult.UpdateAsync(_ => QuestionInterpreter.Answer(model, question), ct);
+            var result = await Agent.AnswerAsync(model, question, ct);
+            await AgentResult.UpdateAsync(_ => result, ct);
         }
     }
 
