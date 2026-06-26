@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Atlas — 02 · Instrument</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ============== 02 · INSTRUMENT ==============
+     A lab instrument, not an "AI dashboard". Warm graphite (tinted, never
+     blue-black), amber phosphor read out sparingly, one signal-green for live.
+     Hairline rules, measured ticks, zero glow. Authority through restraint. */
+  :root{
+    --bg:#15140f; --panel:#1b1a14; --rule:#2c2a20; --rule-2:#39362a;
+    --txt:#e7e2d2; --txt-dim:#9a937e; --txt-faint:#6c6754;
+    --amber:#e0a648; --amber-dim:#9c7c44; --green:#86a96a; --rust:#b86a4e;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0; background:var(--bg); color:var(--txt);
+    font-family:"Sora",sans-serif; font-weight:400; font-size:13.5px; line-height:1.5;
+    -webkit-font-smoothing:antialiased;}
+  .frame{height:100vh; display:grid; grid-template-rows:auto 1fr; grid-template-columns:1fr 350px;
+    grid-template-areas:"top top" "canvas panel";}
+
+  .top{grid-area:top; display:flex; align-items:center; gap:22px; padding:0 24px; height:60px;
+    border-bottom:1px solid var(--rule); background:linear-gradient(#1a1913,#15140f);}
+  .logo{width:13px;height:13px;border:1.5px solid var(--amber);transform:rotate(45deg);}
+  .wm{font-weight:600; letter-spacing:.42em; font-size:15px;}
+  .wm small{color:var(--txt-faint); font-weight:400; letter-spacing:.3em; font-size:10px; margin-left:14px;}
+  .top .spacer{flex:1}
+  .lnk{font-size:12.5px; color:var(--txt-dim); text-decoration:none; padding:8px 12px; border-radius:3px;}
+  .lnk:hover{color:var(--txt); background:var(--panel);}
+  .readout{font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.1em; color:var(--amber);
+    border:1px solid var(--rule-2); border-radius:3px; padding:6px 11px;}
+  .stat{font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.12em; color:var(--txt-dim); display:flex; align-items:center; gap:8px;}
+  .stat .led{width:6px;height:6px;border-radius:50%;background:var(--txt-faint);box-shadow:0 0 0 3px rgba(108,103,84,.15);}
+
+  .canvas{grid-area:canvas; position:relative; overflow:hidden; border-right:1px solid var(--rule);
+    background:
+      radial-gradient(1100px 700px at 60% 40%, #1a1812 0%, #141309 70%);}
+  /* fine reticle ticks */
+  .canvas::before{content:""; position:absolute; inset:0; pointer-events:none; opacity:.5;
+    background:
+      linear-gradient(var(--rule) 1px,transparent 1px) 0 0/100% 96px,
+      linear-gradient(90deg,var(--rule) 1px,transparent 1px) 0 0/128px 100%;}
+  .scale{position:absolute; left:18px; top:0; bottom:0; width:1px; background:var(--rule);}
+  .scale i{position:absolute; left:0; width:7px; height:1px; background:var(--rule-2);}
+  .corner{position:absolute; font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.2em; color:var(--txt-faint);}
+  svg.wires{position:absolute; inset:0; width:100%; height:100%; pointer-events:none;}
+
+  .node{position:absolute; width:152px; background:linear-gradient(#201e16,#1a190f);
+    border:1px solid var(--rule-2); border-radius:4px; padding:9px 11px;}
+  .node::before{content:""; position:absolute; left:0; top:8px; bottom:8px; width:2px; background:var(--rule-2); border-radius:2px;}
+  .node .k{font-family:"IBM Plex Mono",monospace; font-size:9px; letter-spacing:.22em; color:var(--txt-faint);}
+  .node .n{font-weight:500; font-size:14px; margin-top:1px; letter-spacing:.01em;}
+  .node .r{font-family:"IBM Plex Mono",monospace; font-size:10px; color:var(--amber-dim); margin-top:3px;}
+  .node.shell::before{background:var(--amber);}
+  .node.live{border-color:var(--green);}
+  .node.live::before{background:var(--green); box-shadow:0 0 8px rgba(134,169,106,.5);}
+  .node.live .t{position:absolute; top:-8px; right:9px; font-family:"IBM Plex Mono",monospace; font-size:8.5px; letter-spacing:.16em; color:var(--green);}
+  .node.dead{border-color:#52382f;}
+  .node.dead::before{background:var(--rust);}
+  .node.dead .t{position:absolute; top:-8px; right:9px; font-family:"IBM Plex Mono",monospace; font-size:8.5px; letter-spacing:.16em; color:var(--rust);}
+
+  .legend{position:absolute; right:24px; bottom:24px; font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.06em;}
+  .legend div{display:flex; align-items:center; gap:9px; justify-content:flex-end; margin:6px 0; color:var(--txt-dim);}
+  .legend .sw{width:26px;height:0;}
+  .legend .o{border-top:2px solid var(--green);}
+  .legend .d{border-top:2px dashed var(--amber-dim);}
+  .legend .x{border-top:2px dotted var(--rust);}
+
+  .panel{grid-area:panel; background:var(--panel); display:flex; flex-direction:column; overflow:auto;}
+  .ptab{display:flex; border-bottom:1px solid var(--rule);}
+  .ptab div{flex:1; text-align:center; padding:14px 0; font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.2em; color:var(--txt-faint); cursor:pointer;}
+  .ptab .on{color:var(--amber); box-shadow:inset 0 -1px 0 var(--amber);}
+  .pp{padding:20px 20px 8px;}
+  .intro{color:var(--txt-dim); font-size:13.5px; line-height:1.6;}
+  .intro b{color:var(--txt); font-weight:500;}
+  .ask{display:flex; gap:8px; margin:18px 0 6px;}
+  .ask input{flex:1; background:#14130d; border:1px solid var(--rule-2); border-radius:4px; color:var(--txt); font-family:"Sora"; font-size:13px; padding:10px 12px;}
+  .ask input::placeholder{color:var(--txt-faint);}
+  .ask button{background:var(--amber); color:#1a1407; border:none; border-radius:4px; font-family:"IBM Plex Mono"; font-weight:500; font-size:12px; letter-spacing:.08em; padding:0 16px; cursor:pointer;}
+  .ot{font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.24em; color:var(--txt-faint); margin:16px 0 9px;}
+  .chip{display:flex; align-items:center; gap:11px; padding:11px 12px; border:1px solid var(--rule-2); border-radius:4px; margin-bottom:7px; background:#171610; cursor:pointer; transition:border-color .14s,background .14s;}
+  .chip:hover{border-color:var(--amber-dim); background:#1c1a12;}
+  .chip .v{font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.12em; color:var(--green);}
+  .chip .l{font-size:13px;}
+  .chip .c{margin-left:auto; font-family:"IBM Plex Mono",monospace; font-size:10px; color:var(--txt-faint); border:1px solid var(--rule-2); border-radius:999px; padding:1px 7px;}
+  .ans{margin-top:20px; padding-top:16px; border-top:1px solid var(--rule);}
+  .ans .h{font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.26em; color:var(--txt-faint);}
+  .ans p{margin:9px 0 0; color:var(--txt); font-size:13.5px; line-height:1.6;}
+  .ans ol{margin:11px 0 0; padding:0; list-style:none; counter-reset:p;}
+  .ans li{counter-increment:p; font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--amber); padding:5px 0 5px 28px; position:relative;}
+  .ans li::before{content:counter(p,decimal-leading-zero); position:absolute; left:0; color:var(--txt-faint);}
+</style>
+</head>
+<body>
+<div class="frame">
+  <header class="top">
+    <span class="logo"></span>
+    <span class="wm">ATLAS<small>AGENTIC APP MAP</small></span>
+    <span class="spacer"></span>
+    <a class="lnk" href="#">Open model</a>
+    <a class="lnk" href="#">Extract from source</a>
+    <span class="readout">RoundsApp</span>
+    <span class="stat"><span class="led"></span>STATIC · SAMPLE MODEL</span>
+  </header>
+
+  <main class="canvas">
+    <div class="scale" id="scale"></div>
+    <span class="corner" style="left:30px; top:18px;">+0,0</span>
+    <span class="corner" style="right:24px; top:18px;">RETICLE · 1×</span>
+
+    <svg class="wires" viewBox="0 0 980 720" preserveAspectRatio="none">
+      <defs>
+        <marker id="g" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#86a96a"/></marker>
+        <marker id="am" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#9c7c44"/></marker>
+        <marker id="rs" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#b86a4e"/></marker>
+      </defs>
+      <path d="M150,150 C230,170 250,250 330,270" fill="none" stroke="#86a96a" stroke-width="1.6" marker-end="url(#g)"/>
+      <path d="M408,300 C470,320 480,360 540,378" fill="none" stroke="#86a96a" stroke-width="1.6" marker-end="url(#g)"/>
+      <path d="M618,408 C680,420 690,455 740,470" fill="none" stroke="#86a96a" stroke-width="1.6" marker-end="url(#g)"/>
+      <path d="M150,150 C260,150 360,470 540,500" fill="none" stroke="#9c7c44" stroke-width="1.4" stroke-dasharray="5 5" marker-end="url(#am)"/>
+      <path d="M150,150 C300,230 600,560 740,560" fill="none" stroke="#9c7c44" stroke-width="1.4" stroke-dasharray="5 5" marker-end="url(#am)"/>
+      <path d="M740,470 C800,500 820,540 770,610" fill="none" stroke="#9c7c44" stroke-width="1.4" stroke-dasharray="5 5" marker-end="url(#am)"/>
+      <path d="M770,610 C700,640 650,560 600,520" fill="none" stroke="#b86a4e" stroke-width="1.4" stroke-dasharray="2 5" marker-end="url(#rs)"/>
+    </svg>
+
+    <div class="node shell" style="left:64px; top:118px;"><div class="k">SHELL</div><div class="n">Shell</div><div class="r">/</div></div>
+    <div class="node" style="left:300px; top:238px;"><div class="k">PAGE</div><div class="n">Dashboard</div><div class="r">/Dashboard</div></div>
+    <div class="node live" style="left:510px; top:346px;"><span class="t">● LIVE</span><div class="k">PAGE</div><div class="n">PatientList</div><div class="r">/PatientList</div></div>
+    <div class="node" style="left:712px; top:438px;"><div class="k">PAGE</div><div class="n">PatientDetail</div><div class="r">/PatientDetail</div></div>
+    <div class="node" style="left:512px; top:470px;"><div class="k">PAGE</div><div class="n">VitalsEntry</div><div class="r">/VitalsEntry</div></div>
+    <div class="node dead" style="left:712px; top:530px;"><span class="t">DEAD</span><div class="k">PAGE</div><div class="n">ClinicalNotes</div><div class="r">/ClinicalNotes</div></div>
+
+    <div class="legend">
+      <div><span>observed · runtime</span><span class="sw o"></span></div>
+      <div><span>declared · route map</span><span class="sw d"></span></div>
+      <div><span>unreachable · dead</span><span class="sw x"></span></div>
+    </div>
+  </main>
+
+  <aside class="panel">
+    <div class="ptab"><div class="on">AGENT</div><div>INSPECTOR</div></div>
+    <div class="pp">
+      <p class="intro">The agent reads the same graph you see. Ask about the structure of <b>RoundsApp</b>, or point it at a screen to scope an edit.</p>
+      <div class="ask"><input placeholder="Ask about a screen, orphans, duplicates…"/><button>ASK</button></div>
+      <div class="ot">OR TRY</div>
+      <div class="chip"><span class="v">FIND</span><span class="l">1 orphaned screen</span><span class="c">1</span></div>
+      <div class="chip"><span class="v">SHOW</span><span class="l">Every path to VitalsEntry</span></div>
+      <div class="chip"><span class="v">DETECT</span><span class="l">Unreachable routes</span><span class="c">1</span></div>
+      <div class="ans">
+        <div class="h">AGENT</div>
+        <p>3 paths reach VitalsEntry. The deepest enters cold from Login.</p>
+        <ol>
+          <li>Shell → Login → AppShell → Dashboard → PatientList → PatientDetail → VitalsEntry</li>
+          <li>Shell → AppShell → Dashboard → PatientList → PatientDetail → VitalsEntry</li>
+          <li>Shell → PatientDetail → VitalsEntry</li>
+        </ol>
+      </div>
+    </div>
+  </aside>
+</div>
+<script>
+  const s=document.getElementById('scale'); let h='';
+  for(let y=40;y<720;y+=48){h+=`<i style="top:${y}px"></i>`;} s.innerHTML=h;
+</script>
+</body>
+</html>

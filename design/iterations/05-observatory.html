@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Atlas — 05 · Observatory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,500;1,400&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ============== 05 · OBSERVATORY ==============
+     A refined star-chart. Warm charcoal (tinted, never blue-black), brass
+     accent used like gold leaf, an elegant serif for voice. Soft layered depth
+     instead of glassmorphism; generous negative space. The polished, premium
+     "enterprise pitch" take — calm, expensive, considered. */
+  :root{
+    --bg:#16151a; --bg-2:#1b1a20; --surf:#211f27; --surf-2:#262430;
+    --hair:#34313d; --hair-2:#403c4b;
+    --txt:#ece8e1; --txt-2:#a39e96; --txt-3:#736e69;
+    --gold:#c9a86a; --gold-dim:#8f7a4c; --silver:#9aa0ad; --copper:#b97a52;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0; background:var(--bg); color:var(--txt);
+    font-family:"Manrope",sans-serif; font-size:14px; line-height:1.55; -webkit-font-smoothing:antialiased;}
+  .obs{height:100vh; display:grid; grid-template-rows:auto 1fr; grid-template-columns:1fr 368px;
+    grid-template-areas:"top top" "sky panel";}
+
+  .top{grid-area:top; display:flex; align-items:center; gap:26px; padding:0 34px; height:72px;
+    border-bottom:1px solid var(--hair); background:linear-gradient(#1a1920,#16151a);}
+  .em{width:11px;height:11px;border:1px solid var(--gold);border-radius:50%;position:relative;}
+  .em::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--gold);}
+  .name{font-family:"Spectral",serif; font-weight:400; font-size:24px; letter-spacing:.32em;}
+  .name + .sub{font-size:10.5px; letter-spacing:.36em; text-transform:uppercase; color:var(--txt-3); margin-left:-12px;}
+  .top .sp{flex:1}
+  .lnk{font-size:13px; color:var(--txt-2); text-decoration:none; padding:9px 4px; border-bottom:1px solid transparent; transition:color .2s,border-color .2s;}
+  .lnk:hover{color:var(--txt); border-color:var(--gold-dim);}
+  .chip-app{font-family:"Spectral",serif; font-style:italic; font-size:14px; color:var(--gold); padding:7px 16px; border:1px solid var(--hair-2); border-radius:999px;}
+  .svc{font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--txt-3); display:flex; align-items:center; gap:9px;}
+  .svc .d{width:6px;height:6px;border-radius:50%;background:var(--txt-3);box-shadow:0 0 0 4px rgba(115,110,105,.12);}
+
+  .sky{grid-area:sky; position:relative; overflow:hidden;
+    background:
+      radial-gradient(120% 120% at 70% 20%, #1f1d26 0%, #161519 60%, #121116 100%);}
+  .sky::before{content:""; position:absolute; inset:0; pointer-events:none; opacity:.45;
+    background:radial-gradient(circle at 1px 1px, var(--hair) 1px, transparent 0) 0 0/40px 40px;}
+  .sky .ra{position:absolute; left:34px; bottom:26px; font-family:"Spectral",serif; font-style:italic; font-size:13px; color:var(--txt-3); letter-spacing:.06em;}
+  svg.ch{position:absolute; inset:0; width:100%; height:100%; pointer-events:none;}
+
+  .star{position:absolute; width:166px; padding:13px 15px; border-radius:11px;
+    background:linear-gradient(160deg,var(--surf-2),var(--surf));
+    border:1px solid var(--hair); box-shadow:0 1px 0 rgba(255,255,255,.03), 0 14px 32px -18px rgba(0,0,0,.8);}
+  .star .k{font-size:9.5px; letter-spacing:.24em; text-transform:uppercase; color:var(--txt-3);}
+  .star .n{font-family:"Spectral",serif; font-weight:500; font-size:17px; letter-spacing:.01em; margin-top:2px;}
+  .star .r{font-size:11px; color:var(--gold-dim); margin-top:4px; letter-spacing:.02em;}
+  .star.shell{border-color:var(--hair-2); box-shadow:0 0 0 1px rgba(201,168,106,.18), 0 14px 32px -18px rgba(0,0,0,.85);}
+  .star.shell .n{color:var(--gold);}
+  .star.live{border-color:rgba(201,168,106,.5);}
+  .star.live .t{position:absolute; top:-9px; right:13px; font-size:9px; letter-spacing:.18em; color:var(--gold); background:var(--bg-2); padding:2px 8px; border-radius:999px; border:1px solid var(--hair-2);}
+  .star.dim{opacity:.62;}
+  .star.dim .t{position:absolute; top:-9px; right:13px; font-size:9px; letter-spacing:.18em; color:var(--copper); background:var(--bg-2); padding:2px 8px; border-radius:999px; border:1px solid var(--hair-2);}
+
+  .legend{position:absolute; right:28px; top:26px; background:rgba(27,26,32,.7); border:1px solid var(--hair); border-radius:10px; padding:14px 16px;}
+  .legend h4{margin:0 0 11px; font-size:9.5px; letter-spacing:.24em; text-transform:uppercase; color:var(--txt-3);}
+  .legend div{display:flex; align-items:center; gap:11px; margin:8px 0; font-size:12.5px;}
+  .legend .sw{width:28px;height:0;}
+  .legend .o{border-top:1.5px solid var(--gold);}
+  .legend .d{border-top:1.5px dashed var(--silver);}
+  .legend .x{border-top:1.5px dotted var(--copper);}
+  .legend small{margin-left:auto; color:var(--txt-3); font-size:10.5px; letter-spacing:.08em;}
+
+  .panel{grid-area:panel; background:linear-gradient(var(--bg-2),var(--bg)); border-left:1px solid var(--hair); display:flex; flex-direction:column; overflow:auto;}
+  .ptab{display:flex; padding:0 26px; border-bottom:1px solid var(--hair);}
+  .ptab div{padding:18px 18px; font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--txt-3); cursor:pointer;}
+  .ptab .on{color:var(--txt); box-shadow:inset 0 -1px 0 var(--gold);}
+  .pp{padding:24px 26px 10px;}
+  .voice{font-family:"Spectral",serif; font-size:17px; line-height:1.6; color:var(--txt); letter-spacing:.005em;}
+  .voice em{font-style:italic; color:var(--gold);}
+  .ask{display:flex; gap:10px; margin:20px 0 8px;}
+  .ask input{flex:1; background:var(--bg); border:1px solid var(--hair-2); border-radius:9px; padding:11px 13px; color:var(--txt); font-family:"Manrope"; font-size:13px;}
+  .ask input::placeholder{color:var(--txt-3);}
+  .ask button{font-family:"Spectral",serif; font-style:italic; font-size:14px; color:#1a160c; background:var(--gold); border:none; border-radius:9px; padding:0 18px; cursor:pointer;}
+  .ot{font-size:9.5px; letter-spacing:.26em; text-transform:uppercase; color:var(--txt-3); margin:18px 0 10px;}
+  .chip{display:flex; align-items:center; gap:13px; padding:13px 15px; border:1px solid var(--hair); border-radius:10px; margin-bottom:9px; background:var(--surf); cursor:pointer; transition:border-color .2s, transform .2s;}
+  .chip:hover{border-color:var(--hair-2); transform:translateY(-1px);}
+  .chip .v{font-size:9.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--gold-dim);}
+  .chip .l{font-size:14px;}
+  .chip .c{margin-left:auto; font-size:11px; color:var(--txt-3); border:1px solid var(--hair-2); border-radius:999px; padding:1px 9px;}
+  .ans{margin-top:24px; padding-top:18px; border-top:1px solid var(--hair);}
+  .ans .h{font-size:9.5px; letter-spacing:.28em; text-transform:uppercase; color:var(--txt-3);}
+  .ans p{font-family:"Spectral",serif; font-size:15.5px; line-height:1.65; margin:11px 0 0; color:var(--txt);}
+  .ans ol{margin:13px 0 0; padding:0; list-style:none; counter-reset:p;}
+  .ans li{counter-increment:p; font-size:12px; color:var(--txt-2); padding:7px 0 7px 30px; position:relative; border-bottom:1px solid var(--hair);}
+  .ans li::before{content:counter(p,decimal-leading-zero); position:absolute; left:0; font-family:"Spectral",serif; font-style:italic; color:var(--gold);}
+</style>
+</head>
+<body>
+<div class="obs">
+  <header class="top">
+    <span class="em"></span>
+    <span class="name">ATLAS</span><span class="sub">Agentic App Map</span>
+    <span class="sp"></span>
+    <a class="lnk" href="#">Open model</a>
+    <a class="lnk" href="#">Extract from source</a>
+    <span class="chip-app">RoundsApp</span>
+    <span class="svc"><span class="d"></span>Static · Sample model</span>
+  </header>
+
+  <main class="sky">
+    <svg class="ch" viewBox="0 0 980 720" preserveAspectRatio="none">
+      <defs>
+        <marker id="go" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#c9a86a"/></marker>
+        <marker id="si" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#9aa0ad"/></marker>
+        <marker id="cu" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#b97a52"/></marker>
+      </defs>
+      <path d="M156,152 C236,172 252,250 332,272" fill="none" stroke="#c9a86a" stroke-width="1.4" marker-end="url(#go)"/>
+      <path d="M412,302 C474,322 482,360 544,380" fill="none" stroke="#c9a86a" stroke-width="1.4" marker-end="url(#go)"/>
+      <path d="M622,410 C684,422 692,456 744,472" fill="none" stroke="#c9a86a" stroke-width="1.4" marker-end="url(#go)"/>
+      <path d="M156,152 C266,152 366,470 544,502" fill="none" stroke="#9aa0ad" stroke-width="1.2" stroke-dasharray="5 6" marker-end="url(#si)"/>
+      <path d="M744,472 C804,502 824,542 772,612" fill="none" stroke="#9aa0ad" stroke-width="1.2" stroke-dasharray="5 6" marker-end="url(#si)"/>
+      <path d="M772,612 C702,642 652,562 602,522" fill="none" stroke="#b97a52" stroke-width="1.2" stroke-dasharray="2 6" marker-end="url(#cu)"/>
+    </svg>
+
+    <div class="legend">
+      <h4>Provenance</h4>
+      <div><span class="sw o"></span>Observed<small>runtime</small></div>
+      <div><span class="sw d"></span>Declared<small>route map</small></div>
+      <div><span class="sw x"></span>Unreachable<small>dead</small></div>
+    </div>
+
+    <div class="star shell" style="left:64px; top:116px;"><div class="k">Shell</div><div class="n">Shell</div><div class="r">/</div></div>
+    <div class="star" style="left:300px; top:238px;"><div class="k">Page</div><div class="n">Dashboard</div><div class="r">/Dashboard</div></div>
+    <div class="star live" style="left:510px; top:346px;"><span class="t">LIVE</span><div class="k">Page</div><div class="n">PatientList</div><div class="r">/PatientList</div></div>
+    <div class="star" style="left:712px; top:438px;"><div class="k">Page</div><div class="n">PatientDetail</div><div class="r">/PatientDetail</div></div>
+    <div class="star" style="left:512px; top:470px;"><div class="k">Page</div><div class="n">VitalsEntry</div><div class="r">/VitalsEntry</div></div>
+    <div class="star dim" style="left:712px; top:530px;"><span class="t">DEAD</span><div class="k">Page</div><div class="n">ClinicalNotes</div><div class="r">/ClinicalNotes</div></div>
+
+    <div class="ra">Right ascension · static extraction</div>
+  </main>
+
+  <aside class="panel">
+    <div class="ptab"><div class="on">Agent</div><div>Inspector</div></div>
+    <div class="pp">
+      <p class="voice">The agent reads the same chart you do. Ask about the structure of <em>RoundsApp</em>, or point it at a screen to scope an edit.</p>
+      <div class="ask"><input placeholder="Ask about a screen, orphans, duplicates…"/><button>Ask</button></div>
+      <div class="ot">Or try</div>
+      <div class="chip"><span class="v">Find</span><span class="l">1 orphaned screen</span><span class="c">1</span></div>
+      <div class="chip"><span class="v">Show</span><span class="l">Every path to VitalsEntry</span></div>
+      <div class="chip"><span class="v">Trace</span><span class="l">Route to PatientList</span></div>
+      <div class="ans">
+        <div class="h">Agent</div>
+        <p>Three paths reach VitalsEntry — the longest descends from the cold-start login flow.</p>
+        <ol>
+          <li>Shell → Login → AppShell → Dashboard → PatientList → PatientDetail → VitalsEntry</li>
+          <li>Shell → AppShell → Dashboard → PatientList → PatientDetail → VitalsEntry</li>
+          <li>Shell → PatientDetail → VitalsEntry</li>
+        </ol>
+      </div>
+    </div>
+  </aside>
+</div>
+</body>
+</html>

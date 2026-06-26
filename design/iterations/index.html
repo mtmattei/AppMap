@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Atlas — Theme Iterations</title>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#17161b;--surf:#201f26;--hair:#332f3b;--txt:#ece8e1;--txt-2:#a39e96;--gold:#c9a86a;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:"Manrope",sans-serif;line-height:1.6;}
+  header{padding:48px 40px 28px;border-bottom:1px solid var(--hair);}
+  header h1{font-family:"Spectral",serif;font-weight:400;letter-spacing:.18em;font-size:30px;margin:0;}
+  header p{color:var(--txt-2);max-width:60ch;margin:12px 0 0;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:22px;padding:32px 40px;}
+  a.card{display:block;text-decoration:none;color:inherit;border:1px solid var(--hair);border-radius:14px;overflow:hidden;background:var(--surf);transition:transform .2s,border-color .2s;}
+  a.card:hover{transform:translateY(-3px);border-color:var(--gold);}
+  .frame{height:240px;border:none;width:200%;height:480px;transform:scale(.5);transform-origin:top left;pointer-events:none;}
+  .thumb{height:240px;overflow:hidden;border-bottom:1px solid var(--hair);background:#000;}
+  .meta{padding:16px 18px;}
+  .meta .n{font-family:"Spectral",serif;font-size:18px;}
+  .meta .d{color:var(--txt-2);font-size:13px;margin-top:4px;}
+  .meta .tone{display:inline-block;margin-top:10px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);border:1px solid var(--hair);border-radius:999px;padding:3px 10px;}
+</style>
+</head>
+<body>
+<header>
+  <h1>ATLAS · THEME ITERATIONS</h1>
+  <p>Five aesthetic directions for the Atlas viewer, populated with the RoundsApp graph. Open any to explore full-screen; pick one (or a blend) to translate into the XAML theme.</p>
+</header>
+<div class="grid">
+  <a class="card" href="01-drafting-table.html"><div class="thumb"><iframe class="frame" src="01-drafting-table.html"></iframe></div><div class="meta"><div class="n">01 · Drafting Table</div><div class="d">Ink on vellum. A working architectural drawing — light, calm, technical.</div><span class="tone">Light · Blueprint</span></div></a>
+  <a class="card" href="02-instrument.html"><div class="thumb"><iframe class="frame" src="02-instrument.html"></iframe></div><div class="meta"><div class="n">02 · Instrument</div><div class="d">A lab instrument. Warm graphite, amber phosphor, zero glow.</div><span class="tone">Dark · Utilitarian</span></div></a>
+  <a class="card" href="03-transit.html"><div class="thumb"><iframe class="frame" src="03-transit.html"></iframe></div><div class="meta"><div class="n">03 · Transit</div><div class="d">The app as a subway map. Swiss type, colour-coded lines, big and confident.</div><span class="tone">Light · Editorial</span></div></a>
+  <a class="card" href="04-redline.html"><div class="thumb"><iframe class="frame" src="04-redline.html"></iframe></div><div class="meta"><div class="n">04 · Redline</div><div class="d">Developer brutalism. Heavy borders, hard shadows, one signal-red.</div><span class="tone">Light · Brutalist</span></div></a>
+  <a class="card" href="05-observatory.html"><div class="thumb"><iframe class="frame" src="05-observatory.html"></iframe></div><div class="meta"><div class="n">05 · Observatory</div><div class="d">A refined star-chart. Warm charcoal, brass leaf, an elegant serif voice.</div><span class="tone">Dark · Luxury</span></div></a>
+</div>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Atlas — 04 · Redline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* ============== 04 · REDLINE ==============
+     Developer-tool brutalism. Monochrome paper/ink, one harsh signal-red for
+     anything wrong (dead routes, redlines). Heavy borders, hard offset shadows,
+     orthogonal wiring, no rounded corners, exposed system metadata. Raw, loud,
+     confident — built, not decorated. */
+  :root{ --paper:#f4f3ee; --ink:#0c0c0a; --grey:#6b6b63; --hair:#ccc9bd; --red:#e5301c; }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0; background:var(--paper); color:var(--ink);
+    font-family:"Archivo",sans-serif; font-size:13px; -webkit-font-smoothing:antialiased;}
+  .app{height:100vh; display:grid; grid-template-rows:auto 1fr; grid-template-columns:1fr 320px;
+    grid-template-areas:"top top" "main side";}
+
+  .top{grid-area:top; display:flex; align-items:stretch; border-bottom:3px solid var(--ink);}
+  .id{display:flex; align-items:center; gap:16px; padding:0 22px; border-right:3px solid var(--ink);}
+  .mark{width:18px;height:18px;background:var(--ink); position:relative;}
+  .mark::after{content:"";position:absolute;inset:4px;background:var(--red);}
+  .id h1{font-weight:900; font-size:22px; letter-spacing:-.01em; margin:0;}
+  .id .s{font-family:"Space Mono",monospace; font-size:10px; letter-spacing:.18em; color:var(--grey); border-left:1px solid var(--hair); padding-left:14px;}
+  .top .nav{display:flex; margin-left:auto;}
+  .top .nav a{display:flex; align-items:center; padding:0 18px; font-weight:700; font-size:12px; letter-spacing:.04em; text-decoration:none; color:var(--ink); border-left:3px solid var(--ink); }
+  .top .nav a:hover{background:var(--ink); color:var(--paper);}
+  .top .meta{display:flex; align-items:center; gap:10px; padding:0 18px; border-left:3px solid var(--ink); font-family:"Space Mono",monospace; font-size:11px; letter-spacing:.08em;}
+  .top .meta .sq{width:9px;height:9px;background:var(--ink);}
+
+  .main{grid-area:main; position:relative; overflow:hidden; border-right:3px solid var(--ink);
+    background:repeating-linear-gradient(0deg,transparent 0 39px, var(--hair) 39px 40px), repeating-linear-gradient(90deg,transparent 0 39px, var(--hair) 39px 40px), var(--paper);}
+  .main .watermark{position:absolute; right:20px; bottom:14px; font-family:"Space Mono",monospace; font-size:11px; letter-spacing:.24em; color:var(--grey);}
+  svg.wire{position:absolute; inset:0; width:100%; height:100%; pointer-events:none;}
+
+  .blk{position:absolute; width:150px; background:var(--paper); border:3px solid var(--ink); box-shadow:5px 5px 0 var(--ink); padding:8px 10px;}
+  .blk .k{font-family:"Space Mono",monospace; font-size:9px; letter-spacing:.18em; color:var(--grey);}
+  .blk .n{font-weight:900; font-size:15px; line-height:1; margin:3px 0 4px; text-transform:uppercase; letter-spacing:-.01em;}
+  .blk .r{font-family:"Space Mono",monospace; font-size:10px; color:var(--ink);}
+  .blk.shell{box-shadow:5px 5px 0 var(--red);}
+  .blk.live::before{content:"LIVE"; position:absolute; top:-3px; left:-3px; background:var(--ink); color:var(--paper); font-family:"Space Mono"; font-size:9px; letter-spacing:.14em; padding:2px 6px;}
+  .blk.dead{border-color:var(--red); box-shadow:5px 5px 0 var(--red);}
+  .blk.dead .n{color:var(--red);}
+  .blk.dead::before{content:"DEAD"; position:absolute; top:-3px; right:-3px; background:var(--red); color:var(--paper); font-family:"Space Mono"; font-size:9px; letter-spacing:.14em; padding:2px 6px;}
+
+  .legend{position:absolute; left:18px; bottom:16px; border:3px solid var(--ink); background:var(--paper); padding:11px 13px;}
+  .legend div{display:flex; align-items:center; gap:11px; margin:6px 0; font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.04em;}
+  .legend .sw{width:30px;height:0;}
+  .legend .o{border-top:3px solid var(--ink);}
+  .legend .d{border-top:3px dashed var(--ink);}
+  .legend .x{border-top:3px solid var(--red);}
+
+  .side{grid-area:side; background:var(--paper); display:flex; flex-direction:column; overflow:auto;}
+  .stab{display:flex; border-bottom:3px solid var(--ink);}
+  .stab div{flex:1; text-align:center; padding:14px 0; font-weight:800; font-size:12px; letter-spacing:.12em; border-right:3px solid var(--ink); cursor:pointer;}
+  .stab div:last-child{border-right:none; color:var(--grey);}
+  .stab .on{background:var(--ink); color:var(--paper);}
+  .sp{padding:18px;}
+  .sp p.intro{font-size:13.5px; line-height:1.55; color:var(--ink);}
+  .ask{display:flex; border:3px solid var(--ink); margin:16px 0;}
+  .ask input{flex:1; border:none; background:transparent; font-family:"Space Mono",monospace; font-size:12px; padding:11px; color:var(--ink);}
+  .ask input::placeholder{color:var(--grey);}
+  .ask button{border:none; border-left:3px solid var(--ink); background:var(--red); color:var(--paper); font-weight:800; letter-spacing:.08em; padding:0 16px; cursor:pointer; font-size:12px;}
+  .ot{font-family:"Space Mono",monospace; font-size:10px; letter-spacing:.2em; color:var(--grey); margin:12px 0 8px;}
+  .chip{display:flex; align-items:center; gap:10px; border:3px solid var(--ink); padding:10px 11px; margin-bottom:9px; cursor:pointer; background:var(--paper);}
+  .chip:hover{box-shadow:4px 4px 0 var(--ink); transform:translate(-1px,-1px);}
+  .chip .v{font-family:"Space Mono",monospace; font-size:10px; letter-spacing:.1em; color:var(--red);}
+  .chip .l{font-weight:700; font-size:13px;}
+  .chip .c{margin-left:auto; font-family:"Space Mono",monospace; font-size:11px; border:2px solid var(--ink); padding:0 6px;}
+  .ans{border:3px solid var(--ink); margin-top:18px; padding:13px;}
+  .ans .h{font-family:"Space Mono",monospace; font-size:10px; letter-spacing:.2em; color:var(--grey);}
+  .ans p{font-weight:700; font-size:13.5px; line-height:1.5; margin:8px 0 0;}
+  .ans ol{margin:11px 0 0; padding:0; list-style:none; counter-reset:p;}
+  .ans li{counter-increment:p; font-family:"Space Mono",monospace; font-size:10.5px; padding:5px 0 5px 26px; position:relative; border-top:1px solid var(--hair);}
+  .ans li::before{content:counter(p,decimal-leading-zero); position:absolute; left:0; font-weight:700; color:var(--red);}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="id"><span class="mark"></span><h1>ATLAS</h1><span class="s">AGENTIC<br>APP MAP</span></div>
+    <div class="meta"><span class="sq"></span>ROUNDSAPP</div>
+    <div class="meta">STATIC · SAMPLE MODEL</div>
+    <nav class="nav"><a href="#">OPEN MODEL</a><a href="#">EXTRACT</a></nav>
+  </header>
+
+  <main class="main">
+    <svg class="wire" viewBox="0 0 980 720" preserveAspectRatio="none">
+      <defs>
+        <marker id="k" markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#0c0c0a"/></marker>
+        <marker id="rd" markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#e5301c"/></marker>
+      </defs>
+      <!-- orthogonal observed wiring -->
+      <path d="M140,160 H230 V270 H320" fill="none" stroke="#0c0c0a" stroke-width="2.5" marker-end="url(#k)"/>
+      <path d="M400,300 H470 V388 H540" fill="none" stroke="#0c0c0a" stroke-width="2.5" marker-end="url(#k)"/>
+      <path d="M610,418 H690 V480 H740" fill="none" stroke="#0c0c0a" stroke-width="2.5" marker-end="url(#k)"/>
+      <!-- declared (dashed) -->
+      <path d="M140,160 V510 H540" fill="none" stroke="#0c0c0a" stroke-width="2.5" stroke-dasharray="7 6" marker-end="url(#k)"/>
+      <path d="M740,480 H800 V600 H600" fill="none" stroke="#0c0c0a" stroke-width="2.5" stroke-dasharray="7 6" marker-end="url(#k)"/>
+      <!-- dead (red) -->
+      <path d="M600,600 V540 H540" fill="none" stroke="#e5301c" stroke-width="3" marker-end="url(#rd)"/>
+    </svg>
+
+    <div class="blk shell" style="left:64px; top:126px;"><div class="k">SHELL</div><div class="n">Shell</div><div class="r">/</div></div>
+    <div class="blk" style="left:300px; top:240px;"><div class="k">PAGE</div><div class="n">Dashboard</div><div class="r">/Dashboard</div></div>
+    <div class="blk live" style="left:514px; top:350px;"><div class="k">PAGE</div><div class="n">PatientList</div><div class="r">/PatientList</div></div>
+    <div class="blk" style="left:716px; top:444px;"><div class="k">PAGE</div><div class="n">PatientDetail</div><div class="r">/PatientDtl</div></div>
+    <div class="blk" style="left:514px; top:480px;"><div class="k">PAGE</div><div class="n">VitalsEntry</div><div class="r">/VitalsEntry</div></div>
+    <div class="blk dead" style="left:540px; top:570px;"><div class="k">PAGE</div><div class="n">ClinNotes</div><div class="r">/ClinicalNotes</div></div>
+
+    <div class="legend">
+      <div><span class="sw o"></span>Observed</div>
+      <div><span class="sw d"></span>Declared</div>
+      <div><span class="sw x"></span>Unreachable</div>
+    </div>
+    <div class="watermark">NAV/STATIC · 0×</div>
+  </main>
+
+  <aside class="side">
+    <div class="stab"><div class="on">AGENT</div><div>INSPECTOR</div></div>
+    <div class="sp">
+      <p class="intro">The agent reads the same graph you see. Ask about <b>RoundsApp</b>, or point it at a screen to scope an edit.</p>
+      <div class="ask"><input placeholder="ASK A SCREEN, ORPHANS…"/><button>ASK</button></div>
+      <div class="ot">OR TRY</div>
+      <div class="chip"><span class="v">FIND</span><span class="l">1 orphaned screen</span><span class="c">1</span></div>
+      <div class="chip"><span class="v">SHOW</span><span class="l">Paths to VitalsEntry</span></div>
+      <div class="chip"><span class="v">KILL</span><span class="l">Unreachable routes</span><span class="c">1</span></div>
+      <div class="ans">
+        <div class="h">AGENT//OUT</div>
+        <p>3 PATHS REACH VITALSENTRY.</p>
+        <ol>
+          <li>Shell>Login>AppShell>Dashboard>PatientList>PatientDetail>VitalsEntry</li>
+          <li>Shell>AppShell>Dashboard>PatientList>PatientDetail>VitalsEntry</li>
+          <li>Shell>PatientDetail>VitalsEntry</li>
+        </ol>
+      </div>
+    </div>
+  </aside>
+</div>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Atlas — 03 · Transit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ============== 03 · TRANSIT ==============
+     The app as a transit map. Provenance = colour-coded lines, screens =
+     stations. Swiss grotesque, big confident type, generous whitespace,
+     left-aligned editorial hierarchy. Colour does the wayfinding. */
+  :root{
+    --paper:#fbfaf6; --ink:#15171c; --ink-2:#5d626d; --hair:#e4e1d7;
+    --obs:#1f7a5a; --dec:#3f4d8a; --dead:#d2492f; --gold:#caa23a;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0; background:var(--paper); color:var(--ink);
+    font-family:"Hanken Grotesk",sans-serif; font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased;}
+  .wrap{height:100vh; display:grid; grid-template-rows:auto 1fr; grid-template-columns:1fr 330px;
+    grid-template-areas:"top top" "map index";}
+
+  .top{grid-area:top; display:flex; align-items:flex-end; gap:26px; padding:22px 30px 18px; border-bottom:3px solid var(--ink);}
+  .title{font-family:"Archivo",sans-serif; font-weight:900; font-size:30px; letter-spacing:-.02em; line-height:.9;}
+  .title span{color:var(--dead);}
+  .kicker{font-family:"Archivo"; font-weight:700; font-size:11px; letter-spacing:.26em; text-transform:uppercase; color:var(--ink-2); padding-bottom:4px;}
+  .top .spacer{flex:1}
+  .act{font-family:"Archivo"; font-weight:600; font-size:12px; letter-spacing:.04em; color:var(--ink); text-decoration:none; padding:8px 0; border-bottom:2px solid transparent;}
+  .act:hover{border-color:var(--ink);}
+  .route-stamp{font-family:"Archivo"; font-weight:800; font-size:12px; letter-spacing:.1em; background:var(--ink); color:var(--paper); padding:7px 12px;}
+  .svc{font-family:"Archivo"; font-weight:600; font-size:11px; letter-spacing:.14em; color:var(--ink-2); display:flex; gap:8px; align-items:center;}
+  .svc .b{width:10px;height:10px;border-radius:50%;background:var(--ink-2);}
+
+  .map{grid-area:map; position:relative; overflow:hidden; padding:0; background:
+    radial-gradient(circle at 1px 1px, var(--hair) 1px, transparent 0) 0 0/30px 30px, var(--paper);}
+  .map .corner{position:absolute; right:26px; bottom:22px; font-family:"Archivo"; font-weight:700; font-size:11px; letter-spacing:.2em; color:var(--ink-2);}
+  svg.lines{position:absolute; inset:0; width:100%; height:100%;}
+  .station{fill:var(--paper); stroke:var(--ink); stroke-width:3;}
+  .interchange{fill:var(--paper); stroke:var(--ink); stroke-width:4;}
+  .stlabel{font-family:"Archivo"; font-weight:700; font-size:13px; fill:var(--ink);}
+  .stsub{font-family:"Hanken Grotesk"; font-weight:500; font-size:10.5px; fill:var(--ink-2);}
+  .term{font-family:"Archivo"; font-weight:800; font-size:11px; letter-spacing:.06em;}
+
+  .index{grid-area:index; border-left:3px solid var(--ink); background:var(--paper); display:flex; flex-direction:column; overflow:auto;}
+  .ihead{padding:18px 22px 14px; border-bottom:1px solid var(--hair);}
+  .ihead h3{margin:0; font-family:"Archivo"; font-weight:800; font-size:16px; letter-spacing:.02em;}
+  .ihead p{margin:7px 0 0; font-size:13px; color:var(--ink-2); line-height:1.55;}
+  .ip{padding:16px 22px;}
+  .ask{display:flex; gap:0; border:2px solid var(--ink); margin-bottom:18px;}
+  .ask input{flex:1; border:none; padding:11px 12px; font-family:"Hanken Grotesk"; font-size:13px; background:transparent; color:var(--ink);}
+  .ask input::placeholder{color:var(--ink-2);}
+  .ask button{border:none; background:var(--ink); color:var(--paper); font-family:"Archivo"; font-weight:700; font-size:12px; letter-spacing:.08em; padding:0 15px; cursor:pointer;}
+  .key h4{font-family:"Archivo"; font-weight:800; font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-2); margin:0 0 10px;}
+  .keyrow{display:flex; align-items:center; gap:12px; margin:10px 0; font-family:"Archivo"; font-weight:600; font-size:13px;}
+  .keyrow .ln{width:34px;height:6px;border-radius:3px;}
+  .keyrow small{margin-left:auto; font-family:"Hanken Grotesk"; font-weight:500; color:var(--ink-2); font-size:11px;}
+  .lines-list{margin-top:22px; padding-top:16px; border-top:1px solid var(--hair);}
+  .ll{display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid var(--hair); cursor:pointer;}
+  .ll .num{font-family:"Archivo"; font-weight:800; font-size:12px; color:var(--paper); width:24px; height:24px; display:grid; place-items:center; border-radius:6px;}
+  .ll .nm{font-family:"Archivo"; font-weight:700; font-size:13.5px;}
+  .ll .meta{margin-left:auto; font-family:"Hanken Grotesk"; font-size:11px; color:var(--ink-2);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="title">ATLAS<span>.</span></div>
+    <div class="kicker">Agentic<br>App Map</div>
+    <div class="spacer"></div>
+    <a class="act" href="#">Open model</a>
+    <a class="act" href="#">Extract from source</a>
+    <div class="route-stamp">ROUNDSAPP</div>
+    <div class="svc"><span class="b"></span>STATIC · SAMPLE</div>
+  </header>
+
+  <main class="map">
+    <svg class="lines" viewBox="0 0 920 720" preserveAspectRatio="xMidYMid meet">
+      <!-- OBSERVED line (emerald): Login → AppShell → Dashboard → PatientList → PatientDetail → VitalsEntry -->
+      <polyline points="120,130 120,250 280,250 280,400 520,400 520,540 700,540"
+        fill="none" stroke="#1f7a5a" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+      <!-- DECLARED line (indigo): Shell fan-out -->
+      <polyline points="120,130 360,130 360,250 280,250" fill="none" stroke="#3f4d8a" stroke-width="6" stroke-dasharray="2 12" stroke-linecap="round"/>
+      <polyline points="700,540 760,540 760,640 600,640" fill="none" stroke="#3f4d8a" stroke-width="6" stroke-dasharray="2 12" stroke-linecap="round"/>
+      <!-- DEAD line (vermilion) -->
+      <polyline points="600,640 600,540 520,540" fill="none" stroke="#d2492f" stroke-width="6" stroke-dasharray="2 10" stroke-linecap="round"/>
+
+      <!-- interchanges & stations -->
+      <circle class="interchange" cx="120" cy="130" r="9"/><text class="stlabel" x="136" y="126">Shell</text><text class="stsub" x="136" y="141">terminus · /</text>
+      <circle class="station" cx="120" cy="250" r="7"/><text class="stlabel" x="136" y="246">Login</text><text class="stsub" x="136" y="261">default · /Login</text>
+      <circle class="interchange" cx="280" cy="250" r="9"/><text class="stlabel" x="296" y="246">Dashboard</text><text class="stsub" x="296" y="261">/Dashboard</text>
+      <circle class="interchange" cx="520" cy="400" r="10" stroke="#1f7a5a"/><text class="stlabel" x="538" y="396">PatientList</text><text class="stsub" x="538" y="411">● live · /PatientList</text>
+      <circle class="station" cx="520" cy="540" r="7"/><text class="stlabel" x="536" y="536">VitalsEntry</text><text class="stsub" x="536" y="551">/VitalsEntry</text>
+      <circle class="interchange" cx="700" cy="540" r="9"/><text class="stlabel" x="540" y="558"></text><text class="stlabel" x="716" y="536">PatientDetail</text><text class="stsub" x="716" y="551">/PatientDetail</text>
+      <circle class="station" cx="600" cy="640" r="7" stroke="#d2492f"/><text class="stlabel" x="616" y="636" fill="#d2492f">ClinicalNotes</text><text class="stsub" x="616" y="651">dead · /ClinicalNotes</text>
+      <circle class="station" cx="360" cy="130" r="7"/><text class="stlabel" x="376" y="126">AppShell</text><text class="stsub" x="376" y="141">/AppShell</text>
+    </svg>
+    <div class="map corner">NETWORK · 13 STATIONS</div>
+  </main>
+
+  <aside class="index">
+    <div class="ihead">
+      <h3>Network index</h3>
+      <p>The agent reads the same map. Ask about a station, dead lines, or duplicates.</p>
+    </div>
+    <div class="ip">
+      <div class="ask"><input placeholder="Ask about a screen, orphans…"/><button>ASK</button></div>
+      <div class="key">
+        <h4>Lines</h4>
+        <div class="keyrow"><span class="ln" style="background:#1f7a5a"></span>Observed<small>runtime</small></div>
+        <div class="keyrow"><span class="ln" style="background:#3f4d8a"></span>Declared<small>route map</small></div>
+        <div class="keyrow"><span class="ln" style="background:#d2492f"></span>Unreachable<small>dead</small></div>
+      </div>
+      <div class="lines-list">
+        <div class="ll"><span class="num" style="background:#1f7a5a">3</span><span class="nm">Paths to VitalsEntry</span><span class="meta">3 routes</span></div>
+        <div class="ll"><span class="num" style="background:#d2492f">!</span><span class="nm">Unreachable routes</span><span class="meta">1 dead</span></div>
+        <div class="ll"><span class="num" style="background:#caa23a">○</span><span class="nm">Orphaned screens</span><span class="meta">1 found</span></div>
+      </div>
+    </div>
+  </aside>
+</div>
+</body>
+</html>
