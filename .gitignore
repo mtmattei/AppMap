@@ -492,3 +492,6 @@ solution-config.props
 !**/Properties/PublishProfiles/*.pubxml
 # Atlas local nupkg output
 artifacts/
+
+# Local demo/screenshot captures (not part of the repo)
+.demo-check/
