@@ -172,15 +172,15 @@
                                       Opacity="0.55"
                                       Fill="{StaticResource AtlasBorder2Brush}" />
                     <!-- StaticResource: ThemeResource does not apply to custom DPs inside templates -->
-                    <controls:EdgeLayer Source="{Binding Data}"
-                                        ObservedBrush="{StaticResource AtlasObservedBrush}"
-                                        DeclaredBrush="{StaticResource AtlasDeclaredBrush}"
-                                        UnreachableBrush="{StaticResource AtlasUnreachableBrush}"
-                                        ShowObserved="{Binding DataContext.ShowObserved, ElementName=Root, Mode=OneWay}"
-                                        ShowDeclared="{Binding DataContext.ShowDeclared, ElementName=Root, Mode=OneWay}"
-                                        ShowUnreachable="{Binding DataContext.ShowUnreachable, ElementName=Root, Mode=OneWay}"
-                                        HighlightedNodeIds="{Binding DataContext.AgentResult.NodeIds, ElementName=Root, Mode=OneWay}"
-                                        HighlightedEdgeKeys="{Binding DataContext.AgentResult.EdgeKeys, ElementName=Root, Mode=OneWay}" />
+                    <controls:EdgeCanvas Source="{Binding Data}"
+                                         ObservedBrush="{StaticResource AtlasObservedBrush}"
+                                         DeclaredBrush="{StaticResource AtlasDeclaredBrush}"
+                                         UnreachableBrush="{StaticResource AtlasUnreachableBrush}"
+                                         ShowObserved="{Binding DataContext.ShowObserved, ElementName=Root, Mode=OneWay}"
+                                         ShowDeclared="{Binding DataContext.ShowDeclared, ElementName=Root, Mode=OneWay}"
+                                         ShowUnreachable="{Binding DataContext.ShowUnreachable, ElementName=Root, Mode=OneWay}"
+                                         HighlightedNodeIds="{Binding DataContext.AgentResult.NodeIds, ElementName=Root, Mode=OneWay}"
+                                         HighlightedEdgeKeys="{Binding DataContext.AgentResult.EdgeKeys, ElementName=Root, Mode=OneWay}" />
                     <!-- Parent = the page VM exposed by FeedView's template state -->
                     <ItemsRepeater ItemsSource="{Binding Data.Nodes}"
                                    utu:CommandExtensions.Command="{Binding Parent.SelectNode}">

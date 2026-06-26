@@ -231,13 +231,13 @@ public sealed partial class MapPage : Page
 
     // ----- live edge re-routing while a node is dragged -----
 
-    private Controls.EdgeLayer? _edgeLayer;
+    private Controls.EdgeCanvas? _edgeLayer;
 
     private void NodeCard_DragDelta(object? sender, NodeMove move)
     {
         if (_edgeLayer is null || _edgeLayer.XamlRoot is null)
         {
-            _edgeLayer = FindDescendant<Controls.EdgeLayer>(MapZoom);
+            _edgeLayer = FindDescendant<Controls.EdgeCanvas>(MapZoom);
         }
 
         _edgeLayer?.PreviewNodePosition(move.NodeId, new Atlas.Core.Point(move.X, move.Y));
