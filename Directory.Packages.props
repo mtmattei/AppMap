@@ -6,6 +6,7 @@
     See https://aka.platform.uno/using-uno-sdk#implicit-packages for more information regarding the Implicit Packages.
   -->
   <ItemGroup>
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
     <PackageVersion Include="System.Text.Json" Version="10.0.9" />
     <PackageVersion Include="Uno.Extensions.Navigation.WinUI" Version="7.1.4" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
