@@ -31,6 +31,11 @@ static int Run(string[] args)
         return args.Length == 0 ? 1 : 0;
     }
 
+    if (args[0] == "view")
+    {
+        return RunView(args);
+    }
+
     if (args[0] != "extract")
     {
         Console.Error.WriteLine($"Unknown command '{args[0]}'.\n\n{Usage()}");
@@ -125,6 +130,57 @@ static IEnumerable<string> ProjectSources(string dir) =>
         .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
                  && !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal));
 
+static int RunView(string[] args)
+{
+    string? target = null, viewer = null;
+
+    for (var i = 1; i < args.Length; i++)
+    {
+        switch (args[i])
+        {
+            case "--viewer": viewer = Next(args, ref i, "--viewer"); break;
+            default:
+                if (args[i].StartsWith('-'))
+                {
+                    Console.Error.WriteLine($"Unknown option '{args[i]}'.\n\n{Usage()}");
+                    return 1;
+                }
+                if (target is not null)
+                {
+                    Console.Error.WriteLine($"Unexpected argument '{args[i]}'.\n\n{Usage()}");
+                    return 1;
+                }
+                target = args[i];
+                break;
+        }
+    }
+
+    viewer ??= Environment.GetEnvironmentVariable("ATLAS_VIEWER");
+    if (string.IsNullOrWhiteSpace(viewer))
+    {
+        Console.Error.WriteLine("No viewer configured. Pass --viewer <path-to-Atlas.App> or set ATLAS_VIEWER.");
+        return 1;
+    }
+
+    try
+    {
+        var info = new System.Diagnostics.ProcessStartInfo(viewer) { UseShellExecute = true };
+        if (target is not null)
+        {
+            info.Arguments = target.Contains(' ') ? $"\"{target}\"" : target;
+        }
+
+        System.Diagnostics.Process.Start(info);
+        Console.Error.WriteLine(target is null ? "Launched viewer." : $"Launched viewer → {target}");
+        return 0;
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Could not launch viewer '{viewer}': {ex.Message}");
+        return 1;
+    }
+}
+
 static string Next(string[] args, ref int i, string option)
 {
     if (i + 1 >= args.Length)
@@ -146,4 +202,9 @@ static string Usage() =>
       --out <file>    write JSON to a file (default: stdout)
       --no-layout     skip deterministic tree layout (leave positions null)
       --compact       emit single-line JSON instead of indented
+
+    atlas view [<model.json | App.xaml.cs>] [--viewer <path>]
+
+      Launches the Atlas viewer, optionally booting into a model or an extracted source.
+      --viewer <path>  path to the Atlas viewer executable (default: ATLAS_VIEWER env)
     """;

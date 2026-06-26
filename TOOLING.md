@@ -3,6 +3,23 @@
 Atlas has two halves: the **viewer** (the desktop app you look at) and the **agent**
 (a tiny package your app references so the viewer can see it navigate).
 
+## 0. The `atlas` CLI (global tool)
+
+Pack and install the command-line tool once; then `atlas` is on your PATH everywhere:
+
+```powershell
+dotnet pack .\Atlas.Cli\Atlas.Cli.csproj -c Release        # → .\artifacts\Atlas.Tool.0.1.0.nupkg
+dotnet tool install --global --add-source .\artifacts Atlas.Tool
+```
+
+```powershell
+atlas extract <App.xaml.cs> --source <projectDir> --out app.json   # source → AppModel JSON
+atlas view app.json --viewer <path\to\Atlas.App.exe>               # launch the viewer into a model
+```
+
+`atlas view` reads `ATLAS_VIEWER` when `--viewer` is omitted. Update later with
+`dotnet tool update --global --add-source .\artifacts Atlas.Tool`.
+
 ## 1. Get the viewer
 
 ### Run from source (today)

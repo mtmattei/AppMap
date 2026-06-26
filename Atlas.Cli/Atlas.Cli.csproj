@@ -7,6 +7,17 @@
     <Nullable>enable</Nullable>
     <AssemblyName>atlas</AssemblyName>
     <RootNamespace>Atlas.Cli</RootNamespace>
+
+    <!-- Pack with `dotnet pack -c Release`, then install the global tool from ./artifacts.
+         See TOOLING.md for the exact install command. Provides `atlas extract` / `atlas view`. -->
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>atlas</ToolCommandName>
+    <PackageId>Atlas.Tool</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>Atlas</Authors>
+    <Description>Atlas CLI — extract an Uno app's navigation map from source, and launch the Atlas viewer.</Description>
+    <PackageTags>uno-platform;atlas;app-map;cli</PackageTags>
+    <PackageOutputPath>$(MSBuildThisFileDirectory)..\artifacts</PackageOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
