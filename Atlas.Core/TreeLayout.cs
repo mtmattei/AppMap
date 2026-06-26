@@ -91,4 +91,40 @@ public static class TreeLayout
 
         return model with { Nodes = model.Nodes.Select(Position).ToList() };
     }
+
+    /// <summary>
+    /// Forces a full re-layout into the cleanest navigation tree, ignoring any current positions.
+    /// Each node is parented by its highest-priority incoming edge — observed runtime hops first,
+    /// then trigger-bearing flow edges, then plain declared (registration) edges — so the lateral
+    /// flow becomes the spine instead of the flat shell→child fan-out. Only positions change; the
+    /// model's full edge set is preserved.
+    /// </summary>
+    public static AppModel Untangle(AppModel model, Options? options = null)
+    {
+        var cleared = model with
+        {
+            Nodes = model.Nodes.Select(n => n with { Position = null }).ToList(),
+            Edges = ParentEdges(model),
+        };
+
+        var laidOut = Apply(cleared, options);
+        return model with { Nodes = laidOut.Nodes };
+    }
+
+    // One incoming edge per node — its highest-priority parent — so layout follows a single clean tree.
+    private static IReadOnlyList<AppEdge> ParentEdges(AppModel model)
+    {
+        static int Score(AppEdge edge) => edge.Kind switch
+        {
+            EdgeKind.Observed => 3,
+            EdgeKind.Unreachable => 0,
+            _ => edge.Trigger.Length > 0 ? 2 : 1,   // declared: a flow hop (has a trigger) beats structural
+        };
+
+        return model.Edges
+            .Select((edge, order) => (edge, order))
+            .GroupBy(t => t.edge.To)
+            .Select(g => g.OrderByDescending(t => Score(t.edge)).ThenBy(t => t.order).First().edge)
+            .ToList();
+    }
 }

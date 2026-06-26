@@ -275,6 +275,15 @@
                           HorizontalAlignment="Right"
                           VerticalAlignment="Bottom"
                           Margin="0,0,14,14">
+            <Button x:Name="UntangleButton"
+                    Content="⌗"
+                    Command="{Binding Untangle}"
+                    Style="{StaticResource OutlinedButtonStyle}"
+                    MinWidth="44"
+                    MinHeight="44"
+                    Padding="0"
+                    ToolTipService.ToolTip="Untangle into a clean navigation tree"
+                    AutomationProperties.Name="Untangle layout" />
             <Button x:Name="ZoomOutButton"
                     Content="−"
                     Click="ZoomOut_Click"

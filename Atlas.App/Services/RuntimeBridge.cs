@@ -218,6 +218,28 @@ public sealed class RuntimeBridge(IAppModelSource modelSource, ILayoutStore layo
         }
     }
 
+    public void ApplyLayout(IReadOnlyDictionary<string, Atlas.Core.Point> positions)
+    {
+        lock (_gate)
+        {
+            if (_current is not { } model)
+            {
+                return;
+            }
+
+            _current = model with
+            {
+                Nodes = model.Nodes
+                    .Select(n => positions.TryGetValue(n.Id, out var p) ? n with { Position = p } : n)
+                    .ToList(),
+            };
+            layoutStore.Save(
+                _current.App,
+                _current.Nodes.Where(n => n.Position is not null).ToDictionary(n => n.Id, n => n.Position!));
+            Broadcast();
+        }
+    }
+
     private void OnConnectionChanged(object? sender, bool connected)
     {
         lock (_gate)

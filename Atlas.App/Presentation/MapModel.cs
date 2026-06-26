@@ -65,6 +65,18 @@ public partial record MapModel(IRuntimeBridge Bridge, IModelFilePicker Picker, I
         return default;
     }
 
+    // Re-lays the graph into the cleanest navigation tree, replacing any hand-dragged positions.
+    public async ValueTask Untangle(CancellationToken ct)
+    {
+        if (await Graph is { } model)
+        {
+            var tidy = TreeLayout.Untangle(model);
+            Bridge.ApplyLayout(tidy.Nodes
+                .Where(n => n.Position is not null)
+                .ToDictionary(n => n.Id, n => n.Position!));
+        }
+    }
+
     public IState<string> ScopedContext => State<string>.Empty(this);
 
     // Transient status line (SPEC: toast on Jump/Scope, same verb as the button).

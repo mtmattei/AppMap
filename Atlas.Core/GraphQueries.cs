@@ -80,7 +80,9 @@ public static class GraphQueries
             ? $"No path reaches {target.Name} from any entry screen. It is reachable by deep link only."
             : paths.Count == 1
                 ? $"A single path: {Describe(paths[0])}. The final hop is {DescribeKind(paths[0][paths[0].Count - 1])}."
-                : $"{paths.Count} paths reach {target.Name}: {string.Join("; ", paths.Select(Describe))}.";
+                // One path per line so each is distinguishable in the narrow agent column.
+                : $"{paths.Count} paths reach {target.Name}:\n" +
+                  string.Join("\n", paths.Select((p, i) => $"{i + 1}. {Describe(p)}"));
 
         return new QueryResult(nodeIds, edgeKeys, answer);
 

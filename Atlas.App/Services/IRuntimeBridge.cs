@@ -13,6 +13,9 @@ public interface IRuntimeBridge
     /// <summary>Moves a node to a new canvas position and re-emits the model.</summary>
     void MoveNode(string nodeId, double x, double y);
 
+    /// <summary>Replaces every node position (e.g. an auto-layout), persists it, and re-emits.</summary>
+    void ApplyLayout(IReadOnlyDictionary<string, Atlas.Core.Point> positions);
+
     /// <summary>Replaces the current model (e.g. a model file opened by the user).</summary>
     void OpenModel(AppModel model);
 

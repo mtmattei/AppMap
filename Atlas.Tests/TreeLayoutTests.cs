@@ -94,6 +94,30 @@ public class TreeLayoutTests
     }
 
     [Fact]
+    public void Untangle_parents_a_node_by_its_flow_edge_not_the_structural_fan_out()
+    {
+        AppNode Page(string id) =>
+            new(id, id, NodeKind.Page, id, $"{id}Page", $"{id}Model", NodeStatus.Normal, [], [], [], Position: null);
+
+        // shell fans out to a and b structurally; a also flows to b (with a trigger).
+        var model = new AppModel("Sample", At, ModelSource.Static, "1.0",
+            Nodes: [Page("shell") with { Kind = NodeKind.Shell }, Page("a"), Page("b")],
+            Edges:
+            [
+                new AppEdge("shell", "a", EdgeKind.Declared, ""),
+                new AppEdge("shell", "b", EdgeKind.Declared, ""),   // structural fan-out
+                new AppEdge("a", "b", EdgeKind.Declared, "go"),     // real flow hop
+            ]);
+
+        var laid = TreeLayout.Untangle(model);
+        var byId = laid.Nodes.ToDictionary(n => n.Id);
+
+        // b is parented by the flow edge a→b, so it lands a column deeper than a — not beside it.
+        Assert.True(byId["b"].Position!.X > byId["a"].Position!.X);
+        Assert.Equal(3, laid.Edges.Count); // the full edge set is preserved
+    }
+
+    [Fact]
     public void RoundsApp_extracted_then_laid_out_is_a_fanned_tree()
     {
         var path = Path.Combine(AppContext.BaseDirectory, "fixtures", "RoundsApp.App.xaml.cs");
