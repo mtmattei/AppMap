@@ -92,7 +92,7 @@
                 Style="{StaticResource TextButtonStyle}"
                 Command="{Binding OpenModel}"
                 AutomationProperties.Name="Open an app model file" />
-        <Border CornerRadius="999"
+        <Border CornerRadius="24"
                 Padding="11,5"
                 BorderBrush="{StaticResource AtlasBorderBrush}"
                 BorderThickness="1">
@@ -111,7 +111,7 @@
                         Opening="RecentFlyout_Opening" />
           </Button.Flyout>
         </Button>
-        <Border CornerRadius="999"
+        <Border CornerRadius="24"
                 Padding="11,5"
                 BorderBrush="{StaticResource AtlasBorderBrush}"
                 BorderThickness="1">
@@ -363,6 +363,27 @@
                             Padding="16,18">
               <TextBlock Text="{Binding AgentIntro}"
                          Style="{StaticResource AtlasUiProse}"
+                         Foreground="{StaticResource AtlasTextMutedBrush}" />
+
+              <!-- Free-text question: routed through the local QuestionInterpreter over the graph. -->
+              <Grid ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBox Grid.Column="0"
+                         Text="{Binding Question, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                         PlaceholderText="Ask about a screen, orphans, duplicates…"
+                         AutomationProperties.Name="Ask the agent a question" />
+                <Button Grid.Column="1"
+                        Content="Ask"
+                        Style="{StaticResource FilledButtonStyle}"
+                        Command="{Binding AskQuestion}"
+                        AutomationProperties.Name="Run your question" />
+              </Grid>
+
+              <TextBlock Text="OR TRY"
+                         Style="{StaticResource AtlasMonoCaption}"
                          Foreground="{StaticResource AtlasTextMutedBrush}" />
               <!-- Chips are a projection of the loaded model (SuggestionEngine). The bound
                    Suggestion reaches RunSuggestion through utu:CommandExtensions.Command on the
