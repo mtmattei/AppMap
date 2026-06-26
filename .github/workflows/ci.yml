@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # The viewer (Atlas.App) needs the Uno/WASM workload and is excluded here to keep CI fast
+      # and reliable. The non-UI projects (Core / Extraction / Runtime / Cli) and the full test
+      # suite use plain Microsoft.NET.Sdk and build on a clean Linux runner with no workloads.
+      - name: Build CLI (Core + Extraction + Runtime)
+        run: dotnet build Atlas.Cli/Atlas.Cli.csproj -c Release
+
+      - name: Test
+        run: dotnet test Atlas.Tests/Atlas.Tests.csproj -c Release

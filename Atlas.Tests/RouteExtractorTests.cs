@@ -296,6 +296,21 @@ public class RouteExtractorTests
     }
 
     [Fact]
+    public void Extract_then_layout_positions_every_node_and_round_trips()
+    {
+        // The exact pipeline the atlas CLI runs: extract → tree layout → serialize.
+        var path = Path.Combine(AppContext.BaseDirectory, "fixtures", "RoundsApp.App.xaml.cs");
+
+        var model = TreeLayout.Apply(RouteExtractor.ExtractFromFile(path, "RoundsApp", At));
+
+        Assert.All(model.Nodes, n => Assert.NotNull(n.Position));
+
+        var round = AppModelJson.Deserialize(AppModelJson.Serialize(model));
+        Assert.Equal(model.Nodes.Count, round.Nodes.Count);
+        Assert.Equal(model.Edges.Count, round.Edges.Count);
+    }
+
+    [Fact]
     public void Extraction_is_deterministic()
     {
         var path = Path.Combine(AppContext.BaseDirectory, "fixtures", "RoundsApp.App.xaml.cs");

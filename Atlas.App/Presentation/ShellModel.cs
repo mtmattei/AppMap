@@ -1,12 +1,4 @@
 namespace Atlas.App.Presentation;
 
-public class ShellModel
-{
-    private readonly INavigator _navigator;
-
-    public ShellModel(
-        INavigator navigator)
-    {
-        _navigator = navigator;
-    }
-}
+// The shell's view-model. It owns no state today; the route registry maps it to the shell view.
+public class ShellModel;

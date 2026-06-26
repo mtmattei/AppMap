@@ -374,6 +374,7 @@
                 <TextBox Grid.Column="0"
                          Text="{Binding Question, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                          PlaceholderText="Ask about a screen, orphans, duplicates…"
+                         utu:CommandExtensions.Command="{Binding AskQuestion}"
                          AutomationProperties.Name="Ask the agent a question" />
                 <Button Grid.Column="1"
                         Content="Ask"
