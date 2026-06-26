@@ -56,8 +56,10 @@ public partial record MapModel(IRuntimeBridge Bridge, IModelFilePicker Picker, I
 
     private async ValueTask ShowNotice(string message, CancellationToken ct)
     {
-        _noticeCts?.Cancel();
+        var previous = _noticeCts;
         var cts = _noticeCts = new CancellationTokenSource();
+        previous?.Cancel();
+        previous?.Dispose();
         await Notice.SetAsync(message, ct);
         try
         {

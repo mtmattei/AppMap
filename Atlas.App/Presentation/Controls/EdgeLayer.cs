@@ -16,6 +16,10 @@ public partial class EdgeLayer : Canvas
     private const double StrokeWidth = 1.6;
     private const double ArrowSize = 6.4;
 
+    // Dash patterns are constant per kind; share one instance each instead of allocating per edge per frame.
+    private static readonly DoubleCollection DeclaredDashes = new() { 5, 5 };
+    private static readonly DoubleCollection UnreachableDashes = new() { 2, 5 };
+
     public static readonly DependencyProperty SourceProperty = DependencyProperty.Register(
         nameof(Source), typeof(AppModel), typeof(EdgeLayer), new PropertyMetadata(null, OnLayerChanged));
 
@@ -101,16 +105,26 @@ public partial class EdgeLayer : Canvas
 
     private readonly Dictionary<string, Atlas.Core.Point> _previewPositions = new();
 
+    // Placed nodes indexed by id. Depends only on Source, so it is rebuilt when the model changes,
+    // not on every drag-preview frame or legend toggle.
+    private Dictionary<string, AppNode> _nodesById = new();
+
     private static void OnLayerChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var layer = (EdgeLayer)d;
         if (e.Property == SourceProperty)
         {
             layer._previewPositions.Clear(); // a new snapshot carries the committed positions
+            layer.RebuildNodeIndex();
         }
 
         layer.Rebuild();
     }
+
+    private void RebuildNodeIndex() =>
+        _nodesById = Source is { } model
+            ? model.Nodes.Where(n => n.Position is not null).ToDictionary(n => n.Id)
+            : new();
 
     /// <summary>Routes edges against a provisional node position while it is being dragged.</summary>
     public void PreviewNodePosition(string nodeId, Atlas.Core.Point position)
@@ -128,9 +142,7 @@ public partial class EdgeLayer : Canvas
             return;
         }
 
-        var nodesById = model.Nodes
-            .Where(n => n.Position is not null)
-            .ToDictionary(n => n.Id);
+        var nodesById = _nodesById;
 
         var edgeKeys = HighlightedEdgeKeys as IReadOnlyList<string>;
         var nodeIds = HighlightedNodeIds as IReadOnlyList<string>;
@@ -220,8 +232,8 @@ public partial class EdgeLayer : Canvas
 
     private (Brush? Brush, DoubleCollection? Dashes, double Opacity) StyleFor(EdgeKind kind) => kind switch
     {
-        EdgeKind.Declared => (DeclaredBrush, new DoubleCollection { 5, 5 }, 0.65),
-        EdgeKind.Unreachable => (UnreachableBrush, new DoubleCollection { 2, 5 }, 0.7),
+        EdgeKind.Declared => (DeclaredBrush, DeclaredDashes, 0.65),
+        EdgeKind.Unreachable => (UnreachableBrush, UnreachableDashes, 0.7),
         _ => (ObservedBrush, null, 1.0),
     };
 
