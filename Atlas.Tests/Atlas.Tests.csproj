@@ -21,11 +21,14 @@
   <ItemGroup>
     <ProjectReference Include="..\Atlas.Core\Atlas.Core.csproj" />
     <ProjectReference Include="..\Atlas.Runtime\Atlas.Runtime.csproj" />
+    <ProjectReference Include="..\Atlas.Extraction\Atlas.Extraction.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="..\samples\rounds-app-model.json" Link="fixtures\rounds-app-model.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\samples\nursing-app-model.json" Link="fixtures\nursing-app-model.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\samples\RoundsApp\RoundsApp\App.xaml.cs" Link="fixtures\RoundsApp.App.xaml.cs" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\samples\RoundsApp\RoundsApp\Presentation\PatientDetailPage.xaml" Link="fixtures\PatientDetailPage.xaml" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

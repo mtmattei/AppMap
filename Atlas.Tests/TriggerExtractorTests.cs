@@ -154,6 +154,31 @@ public class TriggerExtractorTests
         Assert.Equal(2, model.Edges.Count); // only the structural fan-out
     }
 
+    // ---- real-world integration: the actual RoundsApp sources ----------------
+
+    [Fact]
+    public void Real_RoundsApp_xaml_recovers_the_patient_detail_flow()
+    {
+        var appPath = Path.Combine(AppContext.BaseDirectory, "fixtures", "RoundsApp.App.xaml.cs");
+        var xamlPath = Path.Combine(AppContext.BaseDirectory, "fixtures", "PatientDetailPage.xaml");
+
+        var routes = RouteExtractor.ExtractFromFile(appPath, "RoundsApp.Mobile", At);
+        var model = TriggerExtractor.AddXamlTriggers(routes, [File.ReadAllText(xamlPath)]);
+
+        var pdetail = Assert.Single(model.Nodes, n => n.Route == "PatientDetail");
+
+        // The four forward buttons become labelled flow edges; the "Back" button makes none.
+        var flow = model.Edges
+            .Where(e => e.From == pdetail.Id && e.Trigger.Length > 0)
+            .ToDictionary(e => model.Nodes.Single(n => n.Id == e.To).Route, e => e.Trigger);
+
+        Assert.Equal("Start rounding", flow["RoundingChecklist"]);
+        Assert.Equal("Record vitals", flow["VitalsEntry"]);
+        Assert.Equal("Administer meds", flow["MedAdministration"]);
+        Assert.Equal("Add note", flow["ClinicalNotes"]);
+        Assert.Equal(4, flow.Count);
+    }
+
     // ---- in-place labelling --------------------------------------------------
 
     [Fact]
