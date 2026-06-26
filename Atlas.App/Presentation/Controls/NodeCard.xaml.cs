@@ -108,7 +108,7 @@ public sealed partial class NodeCard : UserControl
             _dragTransform.Y = dy;
             if (DataContext is AppNode { Position: { } origin } node)
             {
-                DragDelta?.Invoke(this, new NodeMove(node.Id, Math.Max(0, origin.X + dx), Math.Max(0, origin.Y + dy)));
+                DragDelta?.Invoke(this, ClampedMove(node.Id, origin, dx, dy));
             }
             e.Handled = true;
         }
@@ -118,9 +118,7 @@ public sealed partial class NodeCard : UserControl
     {
         if (_dragging && DataContext is AppNode { Position: { } origin } node)
         {
-            var x = Math.Max(0, origin.X + _dragTransform.X);
-            var y = Math.Max(0, origin.Y + _dragTransform.Y);
-            MoveCommand?.Execute(new NodeMove(node.Id, x, y));
+            MoveCommand?.Execute(ClampedMove(node.Id, origin, _dragTransform.X, _dragTransform.Y));
             ReleasePointerCaptures();
             e.Handled = true;
         }
@@ -128,6 +126,10 @@ public sealed partial class NodeCard : UserControl
         _pressed = false;
         _dragging = false;
     }
+
+    // A drag offset applied to the node's stored origin, clamped to the positive quadrant.
+    private static NodeMove ClampedMove(string id, Atlas.Core.Point origin, double dx, double dy) =>
+        new(id, Math.Max(0, origin.X + dx), Math.Max(0, origin.Y + dy));
 
     private void ResetDrag()
     {

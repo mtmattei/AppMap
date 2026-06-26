@@ -136,10 +136,7 @@ public sealed class RuntimeBridge(IAppModelSource modelSource, ILayoutStore layo
         {
             _current = ApplyStoredLayout(model);
             _previousNodeId = null;
-            foreach (var subscriber in _modelSubscribers)
-            {
-                subscriber.Writer.TryWrite(_current);
-            }
+            Broadcast();
         }
     }
 
@@ -156,6 +153,20 @@ public sealed class RuntimeBridge(IAppModelSource modelSource, ILayoutStore layo
                 .Select(n => stored.TryGetValue(n.Id, out var p) ? n with { Position = p } : n)
                 .ToList(),
         };
+    }
+
+    // Pushes the current model to every live feed subscriber. Callers hold _gate.
+    private void Broadcast()
+    {
+        if (_current is not { } current)
+        {
+            return;
+        }
+
+        foreach (var subscriber in _modelSubscribers)
+        {
+            subscriber.Writer.TryWrite(current);
+        }
     }
 
     private void OnMessage(object? sender, AgentMessage message)
@@ -181,10 +192,7 @@ public sealed class RuntimeBridge(IAppModelSource modelSource, ILayoutStore layo
 
             _current = ModelMerger.ApplyRoute(model, _previousNodeId, node.Id, message.Timestamp);
             _previousNodeId = node.Id;
-            foreach (var subscriber in _modelSubscribers)
-            {
-                subscriber.Writer.TryWrite(_current);
-            }
+            Broadcast();
         }
     }
 
@@ -206,10 +214,7 @@ public sealed class RuntimeBridge(IAppModelSource modelSource, ILayoutStore layo
             layoutStore.Save(
                 _current.App,
                 _current.Nodes.Where(n => n.Position is not null).ToDictionary(n => n.Id, n => n.Position!));
-            foreach (var subscriber in _modelSubscribers)
-            {
-                subscriber.Writer.TryWrite(_current);
-            }
+            Broadcast();
         }
     }
 

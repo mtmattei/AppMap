@@ -37,20 +37,12 @@ public static class TriggerExtractor
     // ---- public surface ------------------------------------------------------
 
     /// <summary>Merges XAML <c>Navigation.Request</c> triggers from the given XAML documents.</summary>
-    public static AppModel AddXamlTriggers(AppModel model, IEnumerable<string> xamlSources)
-    {
-        var merge = new Merge(model);
-        foreach (var xaml in xamlSources) ApplyXaml(merge, xaml);
-        return merge.ToModel();
-    }
+    public static AppModel AddXamlTriggers(AppModel model, IEnumerable<string> xamlSources) =>
+        AddTriggers(model, xamlSources, []);
 
     /// <summary>Merges imperative <c>Navigate*Async</c> triggers from the given C# sources.</summary>
-    public static AppModel AddCodeTriggers(AppModel model, IEnumerable<string> csSources)
-    {
-        var merge = new Merge(model);
-        foreach (var cs in csSources) ApplyCode(merge, cs);
-        return merge.ToModel();
-    }
+    public static AppModel AddCodeTriggers(AppModel model, IEnumerable<string> csSources) =>
+        AddTriggers(model, [], csSources);
 
     /// <summary>Merges both XAML and code triggers in one pass over the supplied source contents.</summary>
     public static AppModel AddTriggers(AppModel model, IEnumerable<string> xamlSources, IEnumerable<string> csSources)
