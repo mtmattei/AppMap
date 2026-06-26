@@ -32,6 +32,20 @@ public partial record MapModel(IRuntimeBridge Bridge, IModelFilePicker Picker, I
 
     public IState<QueryResult> AgentResult => State<QueryResult>.Empty(this);
 
+    // The free-text agent question; two-way bound to the input box.
+    public IState<string> Question => State<string>.Empty(this);
+
+    // Answers a typed question by routing it through the local interpreter over the loaded graph.
+    public async ValueTask AskQuestion(CancellationToken ct)
+    {
+        var question = await Question;
+        var model = await Graph;
+        if (!string.IsNullOrWhiteSpace(question) && model is not null)
+        {
+            await AgentResult.UpdateAsync(_ => QuestionInterpreter.Answer(model, question), ct);
+        }
+    }
+
     // 0 = Agent, 1 = Inspector. Selecting a node brings the inspector forward.
     public IState<int> PanelTab => State.Value(this, () => 0);
 
