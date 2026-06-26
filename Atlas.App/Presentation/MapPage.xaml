@@ -92,6 +92,10 @@
                 Style="{StaticResource TextButtonStyle}"
                 Command="{Binding OpenModel}"
                 AutomationProperties.Name="Open an app model file" />
+        <Button Content="Extract from source…"
+                Style="{StaticResource TextButtonStyle}"
+                Command="{Binding ExtractFromSource}"
+                AutomationProperties.Name="Extract a model from app source" />
         <Border CornerRadius="24"
                 Padding="11,5"
                 BorderBrush="{StaticResource AtlasBorderBrush}"

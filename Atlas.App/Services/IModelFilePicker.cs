@@ -7,4 +7,7 @@ public interface IModelFilePicker
 {
     /// <summary>Lets the user pick an app-model JSON file; null when cancelled.</summary>
     Task<PickedModel?> PickModelAsync(CancellationToken ct);
+
+    /// <summary>Lets the user pick an app's <c>App.xaml.cs</c> to extract from; path only, null when cancelled.</summary>
+    Task<string?> PickSourcePathAsync(CancellationToken ct);
 }

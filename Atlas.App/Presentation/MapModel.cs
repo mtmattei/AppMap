@@ -1,4 +1,7 @@
 using Atlas.Core;
+#if ATLAS_EXTRACT
+using Atlas.Extraction;
+#endif
 
 namespace Atlas.App.Presentation;
 
@@ -121,6 +124,49 @@ public partial record MapModel(IRuntimeBridge Bridge, IModelFilePicker Picker, I
             await LoadModel(picked.Json, picked.Path, ct);
         }
     }
+
+    // Extracts a model straight from an app's App.xaml.cs (route tree + flow triggers + layout)
+    // and loads it — closing the loop so the CLI isn't needed. Desktop only (Roslyn).
+    public async ValueTask ExtractFromSource(CancellationToken ct)
+    {
+#if ATLAS_EXTRACT
+        var path = await Picker.PickSourcePathAsync(ct);
+        if (path is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var dir = System.IO.Path.GetDirectoryName(System.IO.Path.GetFullPath(path))!;
+            var app = new System.IO.DirectoryInfo(dir).Name;
+
+            var model = RouteExtractor.ExtractFromFile(path, app, DateTimeOffset.Now);
+            model = TriggerExtractor.AddTriggersFromFiles(model, ProjectSources(dir));
+            model = TreeLayout.Apply(model);
+
+            Bridge.OpenModel(model);
+            await ShowNotice($"Extracted → {model.App}", ct);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Extraction from source failed for {Path}.", path);
+            await ShowNotice("Could not extract from that source", ct);
+        }
+#else
+        await ShowNotice("Extraction runs on the desktop app", ct);
+#endif
+    }
+
+#if ATLAS_EXTRACT
+    // Every .xaml / .cs under the project, minus build output that would inject phantom edges.
+    private static IEnumerable<string> ProjectSources(string dir) =>
+        System.IO.Directory.EnumerateFiles(dir, "*.*", System.IO.SearchOption.AllDirectories)
+            .Where(f => (f.EndsWith(".xaml", StringComparison.OrdinalIgnoreCase)
+                      || f.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
+                     && !f.Contains($"{System.IO.Path.DirectorySeparatorChar}obj{System.IO.Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                     && !f.Contains($"{System.IO.Path.DirectorySeparatorChar}bin{System.IO.Path.DirectorySeparatorChar}", StringComparison.Ordinal));
+#endif
 
     // Funnel for path-based loads: drag-drop, recent-pick, launch-arg. Reads the file, then loads.
     public async ValueTask LoadModelFromPath(string path, CancellationToken ct)

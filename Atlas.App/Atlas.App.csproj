@@ -12,9 +12,12 @@
        code so the WASM head stays dependency-clean. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-desktop'">
     <PackageReference Include="Anthropic" />
+    <!-- Roslyn extraction is a desktop concern (the SPEC keeps the viewer platform-clean);
+         ATLAS_EXTRACT guards the in-app "Extract from source…" command to the desktop head. -->
+    <ProjectReference Include="..\Atlas.Extraction\Atlas.Extraction.csproj" />
   </ItemGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-desktop'">
-    <DefineConstants>$(DefineConstants);ATLAS_CLAUDE</DefineConstants>
+    <DefineConstants>$(DefineConstants);ATLAS_CLAUDE;ATLAS_EXTRACT</DefineConstants>
   </PropertyGroup>
   <PropertyGroup>
     <TargetFrameworks>net10.0-browserwasm;net10.0-desktop</TargetFrameworks>

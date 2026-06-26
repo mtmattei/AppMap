@@ -37,4 +37,32 @@ public sealed class ModelFilePicker : IModelFilePicker
 
         return await completion.Task.WaitAsync(ct);
     }
+
+    public async Task<string?> PickSourcePathAsync(CancellationToken ct)
+    {
+        var dispatcher = App.MainDispatcher
+            ?? throw new InvalidOperationException("Dispatcher not available before the window exists.");
+
+        var completion = new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        dispatcher.TryEnqueue(async () =>
+        {
+            try
+            {
+                var picker = new FileOpenPicker
+                {
+                    SuggestedStartLocation = PickerLocationId.ComputerFolder,
+                };
+                picker.FileTypeFilter.Add(".cs");
+
+                var file = await picker.PickSingleFileAsync();
+                completion.TrySetResult(file?.Path);
+            }
+            catch (Exception ex)
+            {
+                completion.TrySetException(ex);
+            }
+        });
+
+        return await completion.Task.WaitAsync(ct);
+    }
 }
