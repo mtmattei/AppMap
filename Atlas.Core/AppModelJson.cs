@@ -27,4 +27,8 @@ public static class AppModelJson
 
     public static string Serialize(AppModel model) =>
         JsonSerializer.Serialize(model, Options);
+
+    /// <summary>Serializes with the compact (single-line) options when <paramref name="compact"/> is set.</summary>
+    public static string Serialize(AppModel model, bool compact) =>
+        JsonSerializer.Serialize(model, compact ? Compact : Options);
 }

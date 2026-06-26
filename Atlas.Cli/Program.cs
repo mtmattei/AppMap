@@ -37,6 +37,7 @@ static int Run(string[] args)
 
     string? path = null, app = null, outPath = null;
     var layout = true;
+    var compact = false;
 
     for (var i = 1; i < args.Length; i++)
     {
@@ -45,6 +46,7 @@ static int Run(string[] args)
             case "--app": app = Next(args, ref i, "--app"); break;
             case "--out": outPath = Next(args, ref i, "--out"); break;
             case "--no-layout": layout = false; break;
+            case "--compact": compact = true; break;
             default:
                 if (args[i].StartsWith('-'))
                 {
@@ -82,7 +84,7 @@ static int Run(string[] args)
         model = TreeLayout.Apply(model);
     }
 
-    var json = AppModelJson.Serialize(model);
+    var json = AppModelJson.Serialize(model, compact);
     if (outPath is null)
     {
         Console.WriteLine(json);
@@ -107,11 +109,12 @@ static string Next(string[] args, ref int i, string option)
 
 static string Usage() =>
     """
-    atlas extract <App.xaml.cs> [--app <name>] [--out <file>] [--no-layout]
+    atlas extract <App.xaml.cs> [--app <name>] [--out <file>] [--no-layout] [--compact]
 
       Parses an Uno app's RegisterRoutes into AppModel JSON.
 
       --app <name>   app name stamped into the model (default: project folder)
       --out <file>   write JSON to a file (default: stdout)
       --no-layout    skip deterministic tree layout (leave positions null)
+      --compact      emit single-line JSON instead of indented
     """;
