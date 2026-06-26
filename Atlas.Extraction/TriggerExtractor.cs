@@ -48,8 +48,12 @@ public static class TriggerExtractor
     public static AppModel AddTriggers(AppModel model, IEnumerable<string> xamlSources, IEnumerable<string> csSources)
     {
         var merge = new Merge(model);
+        var codes = csSources as IReadOnlyList<string> ?? csSources.ToList();
+
+        // Index DataViewMap data types first so a NavigateDataAsync in any file can resolve them.
+        foreach (var cs in codes) IndexDataViewMaps(merge, cs);
         foreach (var xaml in xamlSources) ApplyXaml(merge, xaml);
-        foreach (var cs in csSources) ApplyCode(merge, cs);
+        foreach (var cs in codes) ApplyCode(merge, cs);
         return merge.ToModel();
     }
 
@@ -79,7 +83,10 @@ public static class TriggerExtractor
             var request = element.Attributes()
                 .FirstOrDefault(a => a.Name.LocalName == "Navigation.Request")?.Value;
 
-            if (request is null || IsQualifier(request) || merge.ByRoute(request) is not { } target)
+            // A request may lead with navigation qualifiers (-/Home, ./Detail, !Sheet); strip them
+            // and resolve the route that follows. A pure qualifier (-, ../) or a data binding
+            // ({Binding…}) leaves nothing routable, so it is skipped — no false edge.
+            if (request is null || ForwardRoute(request) is not { } route || merge.ByRoute(route) is not { } target)
             {
                 continue;
             }
@@ -133,7 +140,8 @@ public static class TriggerExtractor
         }
     }
 
-    // NavigateViewModelAsync<T>()/NavigateViewAsync<T>() resolve by type arg; NavigateRouteAsync("x") by string.
+    // Resolves the navigation target: a generic type arg (NavigateViewModelAsync<T>()), else a string
+    // route literal (NavigateRouteAsync("x")), else a created data value (NavigateDataAsync(this, new T())).
     private static AppNode? ResolveTarget(Merge merge, SimpleNameSyntax nameNode, InvocationExpressionSyntax invocation)
     {
         if (nameNode is GenericNameSyntax { TypeArgumentList.Arguments: [var typeArg, ..] })
@@ -141,12 +149,36 @@ public static class TriggerExtractor
             return merge.ByType(RouteExtractor.SimpleName(typeArg));
         }
 
-        var route = invocation.ArgumentList.Arguments
-            .Select(a => a.Expression)
-            .OfType<LiteralExpressionSyntax>()
-            .FirstOrDefault(l => l.IsKind(SyntaxKind.StringLiteralExpression));
+        var args = invocation.ArgumentList.Arguments.Select(a => a.Expression).ToList();
 
-        return route is null ? null : merge.ByRoute(route.Token.ValueText);
+        if (args.OfType<LiteralExpressionSyntax>().FirstOrDefault(l => l.IsKind(SyntaxKind.StringLiteralExpression))
+            is { } route)
+        {
+            return merge.ByRoute(route.Token.ValueText);
+        }
+
+        // NavigateDataAsync(this, new Item()) → resolve Item via the DataViewMap index.
+        return args.OfType<ObjectCreationExpressionSyntax>().FirstOrDefault() is { } data
+            ? merge.ByData(RouteExtractor.SimpleName(data.Type))
+            : null;
+    }
+
+    // Records every DataViewMap<TView, TViewModel, TData> so its data type maps to the screen it opens.
+    private static void IndexDataViewMaps(Merge merge, string csSource)
+    {
+        var root = CSharpSyntaxTree.ParseText(csSource).GetRoot();
+
+        foreach (var creation in root.DescendantNodes().OfType<ObjectCreationExpressionSyntax>())
+        {
+            if (creation.Type is GenericNameSyntax { Identifier.ValueText: "DataViewMap", TypeArgumentList.Arguments: [var view, var viewModel, var data, ..] })
+            {
+                var node = merge.ByType(RouteExtractor.SimpleName(viewModel)) ?? merge.ByType(RouteExtractor.SimpleName(view));
+                if (node is not null)
+                {
+                    merge.RegisterData(RouteExtractor.SimpleName(data), node);
+                }
+            }
+        }
     }
 
     // The caller's owning node is its enclosing view-model (or code-behind view) type.
@@ -186,10 +218,19 @@ public static class TriggerExtractor
         }
     }
 
-    // Uno navigation qualifiers (back/parent/root/dialog/sibling) and data bindings begin with a
-    // non-identifier char; a named forward route always starts with a letter or underscore.
-    private static bool IsQualifier(string request) =>
-        request.Length == 0 || !(char.IsLetter(request[0]) || request[0] == '_');
+    // Strips leading Uno navigation qualifiers (-, ../, /, !, ./) and returns the route that follows,
+    // or null when nothing routable remains — a pure back/parent qualifier, or a {Binding} target.
+    private static string? ForwardRoute(string request)
+    {
+        var i = 0;
+        while (i < request.Length && request[i] is '-' or '/' or '.' or '!')
+        {
+            i++;
+        }
+
+        var route = request[i..];
+        return route.Length > 0 && (char.IsLetter(route[0]) || route[0] == '_') ? route : null;
+    }
 
     // Mutable merge context: node lookups + an edge set that labels hops in place instead of duplicating.
     private sealed class Merge
@@ -200,6 +241,7 @@ public static class TriggerExtractor
         private readonly Dictionary<string, AppNode> _byView = new(StringComparer.Ordinal);
         private readonly Dictionary<string, AppNode> _byViewModel = new(StringComparer.Ordinal);
         private readonly Dictionary<string, AppNode> _byRoute = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, AppNode> _byData = new(StringComparer.Ordinal);
 
         public Merge(AppModel model)
         {
@@ -232,10 +274,15 @@ public static class TriggerExtractor
 
         public AppNode? ByView(string view) => _byView.GetValueOrDefault(view);
         public AppNode? ByRoute(string route) => _byRoute.GetValueOrDefault(route);
+        public AppNode? ByData(string dataType) => _byData.GetValueOrDefault(dataType);
 
         // A generic type arg may name either the view-model or the view; prefer the view-model.
         public AppNode? ByType(string type) =>
             _byViewModel.GetValueOrDefault(type) ?? _byView.GetValueOrDefault(type);
+
+        // Links a DataViewMap's data type to the node it opens, so NavigateDataAsync(this, new T())
+        // can resolve T to that screen.
+        public void RegisterData(string dataType, AppNode node) => _byData.TryAdd(dataType, node);
 
         public void Upsert(string from, string to, string trigger)
         {

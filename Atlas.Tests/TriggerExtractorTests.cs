@@ -98,6 +98,31 @@ public class TriggerExtractorTests
         Assert.All(model.Edges, e => Assert.Equal("", e.Trigger));
     }
 
+    [Fact]
+    public void Xaml_qualifier_prefixed_request_resolves_the_route_after_the_qualifier()
+    {
+        const string xaml = """
+            <Page x:Class="Sample.PatientDetailPage"
+                  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                  xmlns:uen="using:Uno.Extensions.Navigation.UI">
+              <Button Content="Deep link" uen:Navigation.Request="-/RoundingChecklist" />
+              <Button Content="Parent" uen:Navigation.Request="../RoundingChecklist" />
+              <Button Content="Pure back" uen:Navigation.Request="-" />
+            </Page>
+            """;
+
+        var model = TriggerExtractor.AddXamlTriggers(TwoPageApp(), [xaml]);
+
+        var pdetail = Assert.Single(model.Nodes, n => n.Route == "PatientDetail");
+        var rounding = Assert.Single(model.Nodes, n => n.Route == "RoundingChecklist");
+
+        // Both qualifier+route buttons resolve to the same hop (deduped); the bare "-" makes none.
+        var flow = Assert.Single(model.Edges, e => e.From == pdetail.Id && e.To == rounding.Id);
+        Assert.Equal("Deep link", flow.Trigger);
+        Assert.Equal(3, model.Edges.Count); // 2 structural + 1 flow
+    }
+
     // ---- code pass -----------------------------------------------------------
 
     [Fact]
@@ -137,6 +162,29 @@ public class TriggerExtractorTests
 
         var flow = Assert.Single(model.Edges, e => e.From == pdetail.Id && e.To == rounding.Id);
         Assert.Equal("OpenChecklist", flow.Trigger);
+    }
+
+    [Fact]
+    public void Code_navigate_data_resolves_target_through_the_dataviewmap()
+    {
+        // NavigateDataAsync(this, new T()) resolves T via a DataViewMap<View, VM, T> registration.
+        const string code = """
+            public partial record PatientDetailModel(INavigator Navigator)
+            {
+                void Register(IViewRegistry views) =>
+                    views.Register(new DataViewMap<RoundingChecklistPage, RoundingChecklistModel, ChecklistItem>());
+
+                public Task StartFromItem() => Navigator.NavigateDataAsync(this, new ChecklistItem());
+            }
+            """;
+
+        var model = TriggerExtractor.AddCodeTriggers(TwoPageApp(), [code]);
+
+        var pdetail = Assert.Single(model.Nodes, n => n.Route == "PatientDetail");
+        var rounding = Assert.Single(model.Nodes, n => n.Route == "RoundingChecklist");
+
+        var flow = Assert.Single(model.Edges, e => e.From == pdetail.Id && e.To == rounding.Id);
+        Assert.Equal("StartFromItem", flow.Trigger);
     }
 
     [Fact]
