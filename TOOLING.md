@@ -50,6 +50,23 @@ _ = Atlas.Agent.AtlasAgent.Start(Host.Services, "MyApp");
 Requires Uno.Extensions Navigation (`IRouteNotifier`). See
 `samples/RoundsApp` for a complete reference integration.
 
+### Run only your app (auto-launch the viewer)
+
+So you don't launch the viewer by hand each time, point the agent at the Atlas
+executable with two environment variables. When it starts and no viewer is
+reachable, the agent launches one once:
+
+```powershell
+$env:ATLAS_VIEWER      = "C:\path\to\Atlas.App.exe"            # the viewer to launch
+$env:ATLAS_VIEWER_ARGS = "C:\path\to\MyApp\App.xaml.cs"        # boot it into your app's extracted map
+```
+
+Now run **only your app**: the viewer appears, extracts your app's structure from
+that `App.xaml.cs` on boot, and lights up edges as you navigate. The viewer also
+accepts an `App.xaml.cs` (or a model `.json`) directly as a launch argument.
+`ATLAS_VIEWER_ARGS` is optional — without it the viewer opens the bundled sample
+and still fills in observed routes. Extraction-on-boot is a desktop feature.
+
 ## 3. Use it
 
 Run the viewer, run your app, click around. The map fills in as you navigate;

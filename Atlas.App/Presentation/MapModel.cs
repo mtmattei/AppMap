@@ -1,7 +1,4 @@
 using Atlas.Core;
-#if ATLAS_EXTRACT
-using Atlas.Extraction;
-#endif
 
 namespace Atlas.App.Presentation;
 
@@ -150,13 +147,7 @@ public partial record MapModel(IRuntimeBridge Bridge, IModelFilePicker Picker, I
 
         try
         {
-            var dir = System.IO.Path.GetDirectoryName(System.IO.Path.GetFullPath(path))!;
-            var app = new System.IO.DirectoryInfo(dir).Name;
-
-            var model = RouteExtractor.ExtractFromFile(path, app, DateTimeOffset.Now);
-            model = TriggerExtractor.AddTriggersFromFiles(model, ProjectSources(dir));
-            model = TreeLayout.Apply(model);
-
+            var model = SourceExtraction.FromAppSource(path);
             Bridge.OpenModel(model);
             await ShowNotice($"Extracted → {model.App}", ct);
         }
@@ -169,16 +160,6 @@ public partial record MapModel(IRuntimeBridge Bridge, IModelFilePicker Picker, I
         await ShowNotice("Extraction runs on the desktop app", ct);
 #endif
     }
-
-#if ATLAS_EXTRACT
-    // Every .xaml / .cs under the project, minus build output that would inject phantom edges.
-    private static IEnumerable<string> ProjectSources(string dir) =>
-        System.IO.Directory.EnumerateFiles(dir, "*.*", System.IO.SearchOption.AllDirectories)
-            .Where(f => (f.EndsWith(".xaml", StringComparison.OrdinalIgnoreCase)
-                      || f.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
-                     && !f.Contains($"{System.IO.Path.DirectorySeparatorChar}obj{System.IO.Path.DirectorySeparatorChar}", StringComparison.Ordinal)
-                     && !f.Contains($"{System.IO.Path.DirectorySeparatorChar}bin{System.IO.Path.DirectorySeparatorChar}", StringComparison.Ordinal));
-#endif
 
     // Funnel for path-based loads: drag-drop, recent-pick, launch-arg. Reads the file, then loads.
     public async ValueTask LoadModelFromPath(string path, CancellationToken ct)

@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
@@ -38,6 +39,7 @@ public static class AtlasAgent
         private readonly CancellationTokenSource _cts = new();
         private INavigator? _lastNavigator;
         private Action? _detach;
+        private bool _viewerLaunched;
 
         public AgentConnection(string appName, int port, IServiceProvider services)
         {
@@ -45,6 +47,35 @@ public static class AtlasAgent
             _port = port;
             _services = services;
             _ = SendLoopAsync(_cts.Token);
+        }
+
+        // Opt-in convenience: when no viewer is reachable and ATLAS_VIEWER points at the Atlas
+        // executable, launch it once (with ATLAS_VIEWER_ARGS, e.g. this app's App.xaml.cs to extract)
+        // so you only run your app. Failures are swallowed — the agent never affects the host.
+        private void TryLaunchViewer()
+        {
+            var viewer = Environment.GetEnvironmentVariable("ATLAS_VIEWER");
+            if (_viewerLaunched || string.IsNullOrWhiteSpace(viewer))
+            {
+                return;
+            }
+
+            _viewerLaunched = true;
+            try
+            {
+                var info = new ProcessStartInfo(viewer!) { UseShellExecute = true };
+                var arguments = Environment.GetEnvironmentVariable("ATLAS_VIEWER_ARGS");
+                if (!string.IsNullOrWhiteSpace(arguments))
+                {
+                    info.Arguments = arguments;
+                }
+
+                Process.Start(info);
+            }
+            catch
+            {
+                // No-op: a missing/invalid viewer must never disturb the host app.
+            }
         }
 
         public void Attach(Action detach) => _detach = detach;
@@ -96,7 +127,8 @@ public static class AtlasAgent
                 }
                 catch
                 {
-                    // Viewer not running or connection dropped — retry quietly.
+                    // Viewer not running or connection dropped — launch it once (if configured), then retry quietly.
+                    TryLaunchViewer();
                     try
                     {
                         await Task.Delay(TimeSpan.FromSeconds(2), ct).ConfigureAwait(false);

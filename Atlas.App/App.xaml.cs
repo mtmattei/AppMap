@@ -22,6 +22,9 @@ public partial class App : Application
     /// <summary>Model path passed on the command line / via file association (desktop). Set by
     /// Program.Main before the host runs; consumed once at bridge start.</summary>
     internal static string? StartupModelPath { get; set; }
+
+    /// <summary>App.xaml.cs path to extract-and-boot from (desktop); set by Program.Main.</summary>
+    internal static string? StartupSourcePath { get; set; }
     protected IHost? Host { get; private set; }
 
     [SuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "Uno.Extensions APIs are used in a way that is safe for trimming in this template context.")]
@@ -75,7 +78,7 @@ public partial class App : Application
                     services.AddSingleton<IAppModelSource, JsonAppModelSource>();
                     services.AddSingleton<ILayoutStore, JsonLayoutStore>();
                     services.AddSingleton<IRecentModels>(_ => new JsonRecentModels());
-                    services.AddSingleton(new StartupOptions(StartupModelPath));
+                    services.AddSingleton(new StartupOptions(StartupModelPath, StartupSourcePath));
                     services.AddSingleton<IModelFilePicker, ModelFilePicker>();
                     services.AddSingleton<IRuntimeBridge, RuntimeBridge>();
                     RegisterAgentQuery(services);

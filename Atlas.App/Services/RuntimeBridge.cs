@@ -126,6 +126,22 @@ public sealed class RuntimeBridge(IAppModelSource modelSource, ILayoutStore layo
             }
         }
 
+#if ATLAS_EXTRACT
+        // The agent (or a launch arg) can point the viewer at an App.xaml.cs to extract on boot,
+        // so the map shows the target app's real structure immediately.
+        if (startup.SourcePath is { Length: > 0 } source && File.Exists(source))
+        {
+            try
+            {
+                return SourceExtraction.FromAppSource(source);
+            }
+            catch (Exception)
+            {
+                // Extraction failed — fall back to the embedded sample.
+            }
+        }
+#endif
+
         return await modelSource.LoadAsync(ct);
     }
 
