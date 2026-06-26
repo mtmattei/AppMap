@@ -65,7 +65,11 @@
       <Setter.Value>
         <ControlTemplate TargetType="Button">
           <!-- Hover/press tint is a separate layer so brush changes can fade rather than snap. -->
-          <Grid x:Name="Root">
+          <Grid x:Name="Root" RenderTransformOrigin="0.5,0.5">
+            <Grid.RenderTransform>
+              <!-- Tactile press feedback (scale 0.96); transform-only, no layout shift. -->
+              <ScaleTransform x:Name="PressScale" />
+            </Grid.RenderTransform>
             <Border x:Name="Base"
                     Background="{TemplateBinding Background}"
                     BorderBrush="{TemplateBinding BorderBrush}"
@@ -92,18 +96,30 @@
                   <Storyboard>
                     <DoubleAnimation Storyboard.TargetName="HoverTint" Storyboard.TargetProperty="Opacity"
                                      To="0" Duration="0:0:0.15" />
+                    <DoubleAnimation Storyboard.TargetName="PressScale" Storyboard.TargetProperty="ScaleX"
+                                     To="1" Duration="0:0:0.13" />
+                    <DoubleAnimation Storyboard.TargetName="PressScale" Storyboard.TargetProperty="ScaleY"
+                                     To="1" Duration="0:0:0.13" />
                   </Storyboard>
                 </VisualState>
                 <VisualState x:Name="PointerOver">
                   <Storyboard>
                     <DoubleAnimation Storyboard.TargetName="HoverTint" Storyboard.TargetProperty="Opacity"
                                      To="1" Duration="0:0:0.12" />
+                    <DoubleAnimation Storyboard.TargetName="PressScale" Storyboard.TargetProperty="ScaleX"
+                                     To="1" Duration="0:0:0.13" />
+                    <DoubleAnimation Storyboard.TargetName="PressScale" Storyboard.TargetProperty="ScaleY"
+                                     To="1" Duration="0:0:0.13" />
                   </Storyboard>
                 </VisualState>
                 <VisualState x:Name="Pressed">
                   <Storyboard>
                     <DoubleAnimation Storyboard.TargetName="HoverTint" Storyboard.TargetProperty="Opacity"
                                      To="0.55" Duration="0:0:0.05" />
+                    <DoubleAnimation Storyboard.TargetName="PressScale" Storyboard.TargetProperty="ScaleX"
+                                     To="0.96" Duration="0:0:0.06" />
+                    <DoubleAnimation Storyboard.TargetName="PressScale" Storyboard.TargetProperty="ScaleY"
+                                     To="0.96" Duration="0:0:0.06" />
                   </Storyboard>
                 </VisualState>
                 <VisualState x:Name="Disabled">
